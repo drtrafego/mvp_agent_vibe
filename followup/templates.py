@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def _first_name(lead: dict) -> str:
-    name = lead.get("name", "").strip()
+    name = lead.get("nome", "").strip()
     if not name:
         return "Ola"
     return name.split()[0]
