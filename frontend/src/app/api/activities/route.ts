@@ -8,30 +8,17 @@ export async function GET(request: NextRequest) {
   const contactId = searchParams.get("contactId");
   const dealId = searchParams.get("dealId");
 
-  let query = db
-    .select({
-      id: activities.id,
-      type: activities.type,
-      description: activities.description,
-      contactId: activities.contactId,
-      dealId: activities.dealId,
-      scheduledAt: activities.scheduledAt,
-      completedAt: activities.completedAt,
-      createdAt: activities.createdAt,
-      contactName: contacts.name,
-    })
-    .from(activities)
-    .leftJoin(contacts, eq(activities.contactId, contacts.id));
+  let query = db.select({
+    id: activities.id, type: activities.type, description: activities.description,
+    contactId: activities.contactId, dealId: activities.dealId,
+    scheduledAt: activities.scheduledAt, completedAt: activities.completedAt,
+    createdAt: activities.createdAt, contactName: contacts.name,
+  }).from(activities).leftJoin(contacts, eq(activities.contactId, contacts.id));
 
-  if (contactId) {
-    query = query.where(eq(activities.contactId, contactId)) as typeof query;
-  }
+  if (contactId) query = query.where(eq(activities.contactId, contactId)) as typeof query;
+  if (dealId) query = query.where(eq(activities.dealId, dealId)) as typeof query;
 
-  if (dealId) {
-    query = query.where(eq(activities.dealId, dealId)) as typeof query;
-  }
-
-  const results = query.orderBy(desc(activities.createdAt)).all();
+  const results = await query.orderBy(desc(activities.createdAt));
   return NextResponse.json(results);
 }
 
@@ -42,35 +29,23 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "JSON invalido" }, { status: 400 });
   }
-  const { type, description, contactId, dealId, scheduledAt } = body;
 
+  const { type, description, contactId, dealId, scheduledAt } = body;
   if (!type || !description || !contactId) {
-    return NextResponse.json(
-      { error: "Tipo, descripcion y contacto son requeridos" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Tipo, descripcion y contacto son requeridos" }, { status: 400 });
   }
 
   try {
-    const result = db
-      .insert(activities)
-      .values({
-        type,
-        description,
-        contactId,
-        dealId: dealId || null,
-        scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-        completedAt: null,
-        createdAt: new Date(),
-      })
-      .returning()
-      .get();
+    const [result] = await db.insert(activities).values({
+      type, description, contactId, dealId: dealId || null,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+      completedAt: null, createdAt: new Date(),
+    }).returning();
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown";
     return NextResponse.json(
-      { error: `Error al crear actividad: ${msg}` },
+      { error: `Error al crear actividad: ${error instanceof Error ? error.message : "Unknown"}` },
       { status: 500 }
     );
   }

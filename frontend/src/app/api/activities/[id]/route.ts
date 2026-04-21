@@ -17,17 +17,10 @@ export async function PUT(
   }
 
   try {
-    const existing = db
-      .select()
-      .from(activities)
-      .where(eq(activities.id, id))
-      .get();
+    const [existing] = await db.select().from(activities).where(eq(activities.id, id));
 
     if (!existing) {
-      return NextResponse.json(
-        { error: "Actividad no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Actividad no encontrada" }, { status: 404 });
     }
 
     const updateData: Record<string, unknown> = {};
@@ -38,10 +31,7 @@ export async function PUT(
       } else if (typeof body.completedAt === "string") {
         const parsed = new Date(body.completedAt);
         if (isNaN(parsed.getTime())) {
-          return NextResponse.json(
-            { error: "completedAt debe ser una fecha valida" },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: "completedAt deve ser uma data valida" }, { status: 400 });
         }
         updateData.completedAt = parsed;
       }
@@ -49,10 +39,7 @@ export async function PUT(
 
     if (body.description !== undefined) {
       if (typeof body.description !== "string" || !body.description.trim()) {
-        return NextResponse.json(
-          { error: "description debe ser un texto no vacio" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "description deve ser um texto nao vazio" }, { status: 400 });
       }
       updateData.description = body.description;
     }
@@ -63,33 +50,21 @@ export async function PUT(
       } else if (typeof body.scheduledAt === "string") {
         const parsed = new Date(body.scheduledAt);
         if (isNaN(parsed.getTime())) {
-          return NextResponse.json(
-            { error: "scheduledAt debe ser una fecha valida" },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: "scheduledAt deve ser uma data valida" }, { status: 400 });
         }
         updateData.scheduledAt = parsed;
       }
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: "No hay campos para actualizar" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Nao ha campos para atualizar" }, { status: 400 });
     }
 
-    const result = db
-      .update(activities)
-      .set(updateData)
-      .where(eq(activities.id, id))
-      .returning()
-      .get();
-
+    const [result] = await db.update(activities).set(updateData).where(eq(activities.id, id)).returning();
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(
-      { error: `Error al actualizar: ${error instanceof Error ? error.message : "Unknown"}` },
+      { error: `Error ao atualizar: ${error instanceof Error ? error.message : "Unknown"}` },
       { status: 500 }
     );
   }
@@ -102,24 +77,16 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const existing = db
-      .select()
-      .from(activities)
-      .where(eq(activities.id, id))
-      .get();
-
+    const [existing] = await db.select().from(activities).where(eq(activities.id, id));
     if (!existing) {
-      return NextResponse.json(
-        { error: "Actividad no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Actividad no encontrada" }, { status: 404 });
     }
 
-    db.delete(activities).where(eq(activities.id, id)).run();
+    await db.delete(activities).where(eq(activities.id, id));
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: `Error al eliminar: ${error instanceof Error ? error.message : "Unknown"}` },
+      { error: `Error ao eliminar: ${error instanceof Error ? error.message : "Unknown"}` },
       { status: 500 }
     );
   }
