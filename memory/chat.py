@@ -83,7 +83,7 @@ async def _fetch_from_supabase(phone: str) -> list[dict]:
     supabase = _get_supabase()
     try:
         response = (
-            supabase.table("chat_sessions")
+            supabase.schema("agente_vibe").table("chat_sessions")
             .select("role, content")
             .eq("phone", phone)
             .order("created_at", desc=True)
@@ -112,7 +112,7 @@ async def save_messages(phone: str, user_content: str, assistant_content: str) -
     ]
 
     try:
-        supabase.table("chat_sessions").insert(records).execute()
+        supabase.schema("agente_vibe").table("chat_sessions").insert(records).execute()
         logger.debug("supabase: %d mensagens gravadas para %s", len(records), phone)
     except Exception as exc:
         logger.error("supabase insert falhou para %s: %s", phone, exc)
@@ -159,7 +159,7 @@ async def create_table_if_not_exists() -> None:
             sql.strip(),
         )
         # Testa conectividade fazendo um select seguro
-        supabase.table("chat_sessions").select("id").limit(1).execute()
+        supabase.schema("agente_vibe").table("chat_sessions").select("id").limit(1).execute()
         logger.info("chat_sessions: tabela acessivel.")
     except Exception as exc:
         logger.error(

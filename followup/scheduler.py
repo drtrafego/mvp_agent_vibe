@@ -42,7 +42,7 @@ def _calc_bot_cutoff() -> str:
 
 async def _send_followup(lead: dict, message: str) -> bool:
     """Envia mensagem via BOT_SEND_URL. Retorna True se enviou com sucesso."""
-    phone = lead["telefone"]
+    phone = lead["phone"]
     try:
         headers: dict = {}
         if settings.BOT_SEND_TOKEN:
@@ -76,14 +76,14 @@ async def run_followup() -> None:
     # Buscar todos os leads elegiveis por stage e followup_count
     try:
         result = (
-            supabase.table("contacts")
+            supabase.schema("agente_vibe").table("contacts")
             .select(
-                "telefone, nome, stage, nicho, observacoes_sdr, followup_count, "
+                "phone, name, stage, nicho, observacoes_sdr, followup_count, "
                 "last_lead_msg_at, last_bot_msg_at"
             )
             .in_("stage", ["qualificando", "interesse"])
             .lt("followup_count", 5)
-            .not_.is_("telefone", "null")
+            .not_.is_("phone", "null")
             .execute()
         )
         all_leads = result.data or []
@@ -124,12 +124,12 @@ async def run_followup() -> None:
             continue
 
         # Atualizar followup_count e last_bot_msg_at
-        phone = lead["telefone"]
+        phone = lead["phone"]
         new_count = (lead.get("followup_count") or 0) + 1
         try:
-            supabase.table("contacts").update(
+            supabase.schema("agente_vibe").table("contacts").update(
                 {"followup_count": new_count, "last_bot_msg_at": now_iso}
-            ).eq("telefone", phone).execute()
+            ).eq("phone", phone).execute()
         except Exception as exc:
             logger.error("Falha ao atualizar followup_count para phone=%s: %s", phone, exc)
 

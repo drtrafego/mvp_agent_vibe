@@ -26,17 +26,19 @@ def _get_supabase() -> Client:
     return _supabase
 
 
+def _table():
+    return _get_supabase().schema("agente_vibe").table("contacts")
+
+
 async def get_contact(phone: str) -> dict:
     """Retorna dados do contato. Cria registro basico se nao existir."""
-    supabase = _get_supabase()
-    result = supabase.table("contacts").select("*").eq("telefone", phone).limit(1).execute()
+    result = _table().select("*").eq("phone", phone).limit(1).execute()
 
     if result.data:
         return result.data[0]
 
-    # Cria registro basico
-    new_row = {"telefone": phone, "stage": "novo", "followup_count": 0}
-    upsert_result = supabase.table("contacts").upsert(new_row, on_conflict="telefone").execute()
+    new_row = {"phone": phone, "name": phone, "stage": "novo", "followup_count": 0}
+    upsert_result = _table().upsert(new_row, on_conflict="phone").execute()
     if upsert_result.data:
         return upsert_result.data[0]
 
@@ -47,14 +49,12 @@ async def update_contact(phone: str, **kwargs) -> None:
     """Atualiza campos do contato."""
     if not kwargs:
         return
-    supabase = _get_supabase()
-    supabase.table("contacts").update(kwargs).eq("telefone", phone).execute()
+    _table().update(kwargs).eq("phone", phone).execute()
 
 
 async def append_observation(phone: str, obs: str) -> None:
     """Adiciona linha a observacoes_sdr com timestamp. Limita a 20 linhas."""
-    supabase = _get_supabase()
-    result = supabase.table("contacts").select("observacoes_sdr").eq("telefone", phone).limit(1).execute()
+    result = _table().select("observacoes_sdr").eq("phone", phone).limit(1).execute()
 
     existing = ""
     if result.data:
@@ -65,24 +65,22 @@ async def append_observation(phone: str, obs: str) -> None:
 
     lines = existing.splitlines() if existing else []
     lines.append(new_line)
-    lines = lines[-20:]  # manter ultimas 20 linhas
+    lines = lines[-20:]
 
     updated = "\n".join(lines)
-    supabase.table("contacts").update({"observacoes_sdr": updated}).eq("telefone", phone).execute()
+    _table().update({"observacoes_sdr": updated}).eq("phone", phone).execute()
 
 
 async def advance_stage(phone: str, new_stage: str) -> None:
     """Muda o stage validando contra VALID_STAGES."""
     if new_stage not in VALID_STAGES:
-        logger.warning("Stage invalido: %s — ignorado para telefone %s", new_stage, phone)
+        logger.warning("Stage invalido: %s — ignorado para phone %s", new_stage, phone)
         return
-    supabase = _get_supabase()
-    supabase.table("contacts").update({"stage": new_stage}).eq("telefone", phone).execute()
-    logger.info("Stage atualizado: telefone=%s novo_stage=%s", phone, new_stage)
+    _table().update({"stage": new_stage}).eq("phone", phone).execute()
+    logger.info("Stage atualizado: phone=%s novo_stage=%s", phone, new_stage)
 
 
 async def mark_bot_message(phone: str) -> None:
     """Atualiza last_bot_msg_at = now()."""
-    supabase = _get_supabase()
     now_iso = datetime.now(timezone.utc).isoformat()
-    supabase.table("contacts").update({"last_bot_msg_at": now_iso}).eq("telefone", phone).execute()
+    _table().update({"last_bot_msg_at": now_iso}).eq("phone", phone).execute()
