@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   if (type === "contacts") {
     const allContacts = await db.select().from(contacts).orderBy(desc(contacts.createdAt));
-    const headers = ["Nome", "Email", "Telefone", "Empresa", "Fonte", "Temperatura", "Score", "Notas", "Data de criacao"];
+    const headers = ["Nome", "Email", "Telefone", "Empresa", "Origem", "Temperatura", "Score", "Notas", "Data de criação"];
     const rows = allContacts.map((c) => [
       c.name, c.email || "", c.phone || "", c.company || "",
       SOURCE_LABELS[c.source as LeadSource] || c.source,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(pipelineStages, eq(deals.stageId, pipelineStages.id))
       .orderBy(asc(pipelineStages.order));
 
-    const headers = ["Titulo", "Valor", "Contacto", "Etapa", "Probabilidade", "Fechamento Estimado", "Notas", "Data de criacao"];
+    const headers = ["Título", "Valor", "Contato", "Etapa", "Probabilidade", "Fechamento Estimado", "Notas", "Data de criação"];
     const rows = allDeals.map((d) => [
       d.title, formatCurrency(d.value), d.contactName || "", d.stageName || "",
       `${d.probability}%`, formatDate(d.expectedClose), d.notes || "", formatDate(d.createdAt),
@@ -57,5 +57,5 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return new Response("Tipo invalido. Use ?type=contacts ou ?type=deals", { status: 400 });
+  return new Response("Tipo inválido. Use ?type=contacts ou ?type=deals", { status: 400 });
 }

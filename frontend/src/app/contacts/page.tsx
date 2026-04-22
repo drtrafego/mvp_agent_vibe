@@ -36,12 +36,12 @@ export default function ContactsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Contactos</h1>
           <p className="text-muted-foreground">
-            Gestiona tus leads y prospectos
+            Gerencie seus leads e prospects
           </p>
         </div>
         <Button onClick={() => setShowForm(true)} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo Contacto
+          Novo Contato
         </Button>
       </div>
 

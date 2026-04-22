@@ -32,7 +32,7 @@ export default async function PipelinePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Pipeline</h1>
-        <p className="text-muted-foreground">Arrastra y suelta deals entre etapas</p>
+        <p className="text-muted-foreground">Arraste e solte deals entre etapas</p>
       </div>
       <KanbanBoard initialColumns={columns} />
     </div>

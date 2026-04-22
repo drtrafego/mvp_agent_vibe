@@ -61,7 +61,7 @@ export function DealCard({
           )}
         </div>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{contactName || "Sin contacto"}</span>
+          <span>{contactName || "Sem contato"}</span>
           <span>{probability}%</span>
         </div>
       </div>

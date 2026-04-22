@@ -24,8 +24,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const contactSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email invalido").or(z.literal("")),
+  name: z.string().min(1, "O nome é obrigatório"),
+  email: z.string().email("Email inválido").or(z.literal("")),
   phone: z.string(),
   company: z.string(),
   source: z.string(),
@@ -78,16 +78,16 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) throw new Error("Erro ao salvar");
 
       toast.success(
-        isEditing ? "Contacto actualizado" : "Contacto creado"
+        isEditing ? "Contato atualizado" : "Contato criado"
       );
       reset();
       onClose();
       router.refresh();
     } catch {
-      toast.error("Error al guardar el contacto");
+      toast.error("Erro ao salvar o contato");
     }
   };
 
@@ -96,14 +96,14 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Editar Contacto" : "Nuevo Contacto"}
+            {isEditing ? "Editar Contato" : "Novo Contato"}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" {...register("name")} placeholder="Nombre completo" />
+            <Label htmlFor="name">Nome *</Label>
+            <Input id="name" {...register("name")} placeholder="Nome completo" />
             {errors.name && (
               <p className="text-xs text-destructive">{errors.name.message}</p>
             )}
@@ -112,22 +112,22 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register("email")} placeholder="correo@ejemplo.com" />
+              <Input id="email" type="email" {...register("email")} placeholder="contato@exemplo.com" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefono</Label>
-              <Input id="phone" {...register("phone")} placeholder="+52 55 1234 5678" />
+              <Label htmlFor="phone">Telefone</Label>
+              <Input id="phone" {...register("phone")} placeholder="+55 11 91234-5678" />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="company">Empresa</Label>
-            <Input id="company" {...register("company")} placeholder="Nombre de la empresa" />
+            <Input id="company" {...register("company")} placeholder="Nome da empresa" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Fuente</Label>
+              <Label>Origem</Label>
               <Select
                 value={watch("source")}
                 onValueChange={(v) => v && setValue("source", v)}
@@ -136,17 +136,17 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="website">Sitio web</SelectItem>
+                  <SelectItem value="website">Site</SelectItem>
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="referido">Referido</SelectItem>
-                  <SelectItem value="redes_sociales">Redes sociales</SelectItem>
-                  <SelectItem value="llamada_fria">Llamada fria</SelectItem>
+                  <SelectItem value="referido">Indicação</SelectItem>
+                  <SelectItem value="redes_sociales">Redes sociais</SelectItem>
+                  <SelectItem value="llamada_fria">Ligação fria</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="formulario">Formulario</SelectItem>
+                  <SelectItem value="formulario">Formulário</SelectItem>
                   <SelectItem value="evento">Evento</SelectItem>
                   <SelectItem value="import">Importado</SelectItem>
                   <SelectItem value="webhook">Webhook</SelectItem>
-                  <SelectItem value="otro">Otro</SelectItem>
+                  <SelectItem value="otro">Outro</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -163,8 +163,8 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cold">Frio</SelectItem>
-                  <SelectItem value="warm">Tibio</SelectItem>
-                  <SelectItem value="hot">Caliente</SelectItem>
+                  <SelectItem value="warm">Morno</SelectItem>
+                  <SelectItem value="hot">Quente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -172,7 +172,7 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notas</Label>
-            <Textarea id="notes" {...register("notes")} placeholder="Notas sobre el contacto..." rows={3} />
+            <Textarea id="notes" {...register("notes")} placeholder="Notas sobre o contato..." rows={3} />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -180,7 +180,7 @@ export function ContactForm({ open, onClose, initialData }: ContactFormProps) {
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
-              {isSubmitting ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
+              {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Criar"}
             </Button>
           </div>
         </form>

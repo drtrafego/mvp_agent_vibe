@@ -44,9 +44,9 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
     return (
       <EmptyState
         icon={Users}
-        title="No hay contactos"
-        description="Agrega tu primer contacto para comenzar a gestionar tu pipeline de ventas."
-        actionLabel="Agregar contacto"
+        title="Nenhum contato"
+        description="Adicione seu primeiro contato para começar a gerenciar seu pipeline de vendas."
+        actionLabel="Adicionar contato"
         onAction={() => router.push("/contacts?new=true")}
       />
     );
@@ -58,7 +58,7 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nombre, email o empresa..."
+            placeholder="Buscar por nome, email ou empresa..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -73,7 +73,7 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
               onClick={() => setFilterTemp(temp)}
               className="cursor-pointer"
             >
-              {temp === "" ? "Todos" : temp === "hot" ? "Caliente" : temp === "warm" ? "Tibio" : "Frio"}
+              {temp === "" ? "Todos" : temp === "hot" ? "Quente" : temp === "warm" ? "Morno" : "Frio"}
             </Button>
           ))}
           <Button
@@ -92,12 +92,12 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead className="hidden sm:table-cell">Empresa</TableHead>
-              <TableHead className="hidden md:table-cell">Fuente</TableHead>
+              <TableHead className="hidden md:table-cell">Origem</TableHead>
               <TableHead>Temperatura</TableHead>
               <TableHead className="hidden md:table-cell">Score</TableHead>
-              <TableHead className="hidden lg:table-cell">Fecha</TableHead>
+              <TableHead className="hidden lg:table-cell">Data</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -111,7 +111,7 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
                   <div>
                     <p className="font-medium">{contact.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {contact.email || "Sin email"}
+                      {contact.email || "Sem email"}
                     </p>
                   </div>
                 </TableCell>
@@ -147,7 +147,7 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        {filtered.length} de {contacts.length} contactos
+        {filtered.length} de {contacts.length} contatos
       </p>
     </div>
   );

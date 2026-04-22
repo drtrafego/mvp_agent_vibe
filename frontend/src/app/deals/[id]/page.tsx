@@ -57,11 +57,11 @@ export default async function DealDetailPage({
           <p className="text-xl font-bold text-primary">{formatCurrency(deal.value)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Percent className="h-4 w-4" />Probabilidad</div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Percent className="h-4 w-4" />Probabilidade</div>
           <p className="text-xl font-bold">{deal.probability}%</p>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Calendar className="h-4 w-4" />Cierre estimado</div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1"><Calendar className="h-4 w-4" />Fechamento estimado</div>
           <p className="text-xl font-bold">{formatDate(deal.expectedClose)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-6">
@@ -77,10 +77,10 @@ export default async function DealDetailPage({
           </Card>
         )}
         <Card>
-          <CardHeader><CardTitle className="text-base">Actividades ({dealActivities.length})</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Atividades ({dealActivities.length})</CardTitle></CardHeader>
           <CardContent>
             {dealActivities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No hay actividades registradas para este deal</p>
+              <p className="text-sm text-muted-foreground">Nenhuma atividade registrada para este deal</p>
             ) : (
               <div className="space-y-3">
                 {dealActivities.map((activity) => {

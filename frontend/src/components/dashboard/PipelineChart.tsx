@@ -27,12 +27,12 @@ export function PipelineChart({ data }: PipelineChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Pipeline de Ventas</CardTitle>
+        <CardTitle className="text-base">Pipeline de Vendas</CardTitle>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            No hay deals en el pipeline
+            Nenhum deal no pipeline
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
@@ -50,7 +50,7 @@ export function PipelineChart({ data }: PipelineChartProps) {
               <Tooltip
                 formatter={(value) => [
                   `${value} deals`,
-                  "Cantidad",
+                  "Quantidade",
                 ]}
                 contentStyle={{
                   borderRadius: "8px",

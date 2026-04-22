@@ -37,36 +37,36 @@ export default function SettingsPage() {
   const commands = [
     {
       name: "/setup",
-      description: "Configurar CRM para tu negocio",
+      description: "Configurar o CRM para seu negócio",
     },
     {
       name: "/add-lead",
-      description: "Agregar un lead de forma conversacional",
+      description: "Adicionar um lead de forma conversacional",
     },
     {
       name: "/analyze-pipeline",
-      description: "Analizar pipeline y obtener recomendaciones",
+      description: "Analisar pipeline e obter recomendações",
     },
     {
       name: "/daily-briefing",
-      description: "Resumen diario de ventas",
+      description: "Resumo diário de vendas",
     },
     {
       name: "/import-contacts",
-      description: "Importar contactos desde CSV",
+      description: "Importar contatos de CSV",
     },
     {
       name: "/customize",
-      description: "Re-personalizar tu CRM",
+      description: "Personalizar seu CRM",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuracion</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
         <p className="text-muted-foreground">
-          Configuracion del CRM y comandos disponibles
+          Configurações do CRM e comandos disponíveis
         </p>
       </div>
 
@@ -76,7 +76,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              Negocio
+              Negócio
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -87,18 +87,18 @@ export default function SettingsPage() {
                   <span className="capitalize">{config.business.type}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Industria</span>
+                  <span className="text-muted-foreground">Indústria</span>
                   <span className="capitalize">{config.business.industry}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Equipo</span>
+                  <span className="text-muted-foreground">Equipe</span>
                   <span>{config.business.teamSize}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Idioma</span>
                   <span>
-                    {config.preferences.language === "es" ? "Espanol" : "Ingles"}
+                    {config.preferences.language === "es" ? "Espanhol" : config.preferences.language === "pt" ? "Português" : "Inglês"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -108,8 +108,7 @@ export default function SettingsPage() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Ejecuta <code>/setup</code> en Claude Code para configurar tu
-                negocio.
+                Execute <code>/setup</code> no Claude Code para configurar seu negócio.
               </p>
             )}
           </CardContent>
@@ -120,7 +119,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Kanban className="h-4 w-4" />
-              Etapas del Pipeline
+              Etapas do Pipeline
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -142,8 +141,7 @@ export default function SettingsPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Usa <code>/customize</code> en Claude Code para modificar las
-              etapas.
+              Use <code>/customize</code> no Claude Code para modificar as etapas.
             </p>
           </CardContent>
         </Card>
@@ -158,7 +156,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Recibe leads automaticamente desde formularios, landing pages, o cualquier herramienta que soporte webhooks.
+              Receba leads automaticamente de formulários, landing pages ou qualquer ferramenta que suporte webhooks.
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -179,13 +177,13 @@ export default function SettingsPage() {
                 </button>
               </div>
               <div className="p-3 rounded-lg bg-muted/50 text-xs font-mono">
-                <p className="text-muted-foreground mb-1">Ejemplo:</p>
+                <p className="text-muted-foreground mb-1">Exemplo:</p>
                 <p>curl -X POST {typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/api/webhook \</p>
                 <p className="pl-4">-H &quot;Content-Type: application/json&quot; \</p>
-                <p className="pl-4">-d &apos;{`{"name":"Juan","email":"j@test.com","phone":"555-1234"}`}&apos;</p>
+                <p className="pl-4">-d &apos;{`{"name":"João","email":"j@test.com","phone":"11912345678"}`}&apos;</p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Soporta campos en espanol e ingles: name/nombre, email/correo, phone/telefono, company/empresa, notes/notas
+                Suporta campos em português e inglês: name/nome, email/correo, phone/telefone, company/empresa, notes/notas
               </p>
             </div>
           </CardContent>
@@ -196,13 +194,13 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              Notificaciones
+              Notificações
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <NotificationToggle />
             <p className="text-xs text-muted-foreground">
-              Las notificaciones te avisan cuando tienes seguimientos vencidos. Se verifican cada 5 minutos mientras el CRM esta abierto.
+              As notificações avisam quando há acompanhamentos vencidos. São verificadas a cada 5 minutos enquanto o CRM estiver aberto.
             </p>
           </CardContent>
         </Card>
@@ -212,14 +210,12 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Terminal className="h-4 w-4" />
-              Comandos de Claude Code
+              Comandos do Claude Code
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Estos comandos estan disponibles cuando abres el proyecto en Claude
-              Code. Escribe el comando directamente en el terminal de Claude
-              Code.
+              Estes comandos estão disponíveis quando você abre o projeto no Claude Code. Digite o comando diretamente no terminal do Claude Code.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {commands.map((cmd) => (

@@ -91,17 +91,17 @@ export function ContactDetailClient({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Estas seguro de eliminar este contacto? Esta accion no se puede deshacer.")) {
+    if (!confirm("Tem certeza que deseja excluir este contato? Esta ação não pode ser desfeita.")) {
       return;
     }
 
     try {
       const res = await fetch(`/api/contacts/${contact.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar");
-      toast.success("Contacto eliminado");
+      if (!res.ok) throw new Error("Erro ao excluir");
+      toast.success("Contato excluído");
       router.push("/contacts");
     } catch {
-      toast.error("Error al eliminar el contacto");
+      toast.error("Erro ao excluir o contato");
     }
   };
 
@@ -112,11 +112,11 @@ export function ContactDetailClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completedAt: new Date().toISOString() }),
       });
-      if (!res.ok) throw new Error("Error");
-      toast.success("Actividad completada");
+      if (!res.ok) throw new Error("Erro");
+      toast.success("Atividade concluída");
       router.refresh();
     } catch {
-      toast.error("Error al completar la actividad");
+      toast.error("Erro ao concluir a atividade");
     }
   };
 
@@ -128,7 +128,7 @@ export function ContactDetailClient({
           size="icon"
           onClick={() => router.push("/contacts")}
           className="cursor-pointer"
-          aria-label="Volver a contactos"
+          aria-label="Voltar aos contatos"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -159,7 +159,7 @@ export function ContactDetailClient({
             className="cursor-pointer text-destructive hover:text-destructive"
           >
             <Trash2 className="h-4 w-4 mr-1" />
-            Eliminar
+            Excluir
           </Button>
         </div>
       </div>
@@ -168,7 +168,7 @@ export function ContactDetailClient({
         {/* Contact info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Informacion</CardTitle>
+            <CardTitle className="text-base">Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {contact.email && (
@@ -180,7 +180,7 @@ export function ContactDetailClient({
                 <button
                   onClick={() => handleCopy(contact.email!, "email")}
                   className="p-1 rounded hover:bg-muted cursor-pointer"
-                  title="Copiar email"
+                  title="Copiar e-mail"
                 >
                   {copiedField === "email" ? (
                     <Check className="h-3.5 w-3.5 text-green-600" />
@@ -200,21 +200,21 @@ export function ContactDetailClient({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1 rounded hover:bg-green-50 cursor-pointer"
-                    title="Abrir WhatsApp"
+                    title="Abrir no WhatsApp"
                   >
                     <MessageCircle className="h-3.5 w-3.5 text-green-600" />
                   </a>
                   <a
                     href={`tel:${contact.phone}`}
                     className="p-1 rounded hover:bg-blue-50 cursor-pointer"
-                    title="Llamar"
+                    title="Ligar"
                   >
                     <Phone className="h-3.5 w-3.5 text-blue-600" />
                   </a>
                   <button
                     onClick={() => handleCopy(contact.phone!, "phone")}
                     className="p-1 rounded hover:bg-muted cursor-pointer"
-                    title="Copiar telefono"
+                    title="Copiar telefone"
                   >
                     {copiedField === "phone" ? (
                       <Check className="h-3.5 w-3.5 text-green-600" />
@@ -233,7 +233,7 @@ export function ContactDetailClient({
             )}
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Creado {formatDate(contact.createdAt)}</span>
+              <span>Criado {formatDate(contact.createdAt)}</span>
             </div>
             {contact.notes && (
               <div className="pt-2 border-t">
@@ -252,7 +252,7 @@ export function ContactDetailClient({
           </CardHeader>
           <CardContent>
             {deals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin deals</p>
+              <p className="text-sm text-muted-foreground">Sem deals</p>
             ) : (
               <div className="space-y-3">
                 {deals.map((deal) => (
@@ -302,7 +302,7 @@ export function ContactDetailClient({
           <CardContent>
             {activities.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Sin actividades. Registra una llamada, email o nota.
+                Sem atividades. Registre uma ligação, email ou nota.
               </p>
             ) : (
               <div className="space-y-4">
@@ -326,7 +326,7 @@ export function ContactDetailClient({
                               className="text-xs text-orange-600 border-orange-600 cursor-pointer"
                               onClick={() => handleCompleteActivity(activity.id)}
                             >
-                              Completar
+                              Concluir
                             </Badge>
                           )}
                         </div>

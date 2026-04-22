@@ -53,25 +53,25 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Resumen de tu pipeline de ventas</p>
+        <p className="text-muted-foreground">Resumo do seu pipeline de vendas</p>
       </div>
 
       {isFirstRun && (
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-6">
-          <h2 className="text-lg font-semibold mb-2">Bienvenido a Auto-CRM</h2>
-          <p className="text-sm text-muted-foreground mb-4">Tu CRM esta listo. Aqui tienes como comenzar:</p>
+          <h2 className="text-lg font-semibold mb-2">Bem-vindo ao Auto-CRM</h2>
+          <p className="text-sm text-muted-foreground mb-4">Seu CRM está pronto. Veja como começar:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
             <div className="p-3 rounded-lg bg-card border">
-              <p className="font-medium">1. Personaliza tu CRM</p>
-              <p className="text-xs text-muted-foreground mt-1">Ejecuta <code className="bg-muted px-1 rounded">/setup</code> en Claude Code</p>
+              <p className="font-medium">1. Personalize seu CRM</p>
+              <p className="text-xs text-muted-foreground mt-1">Execute <code className="bg-muted px-1 rounded">/setup</code> no Claude Code</p>
             </div>
             <div className="p-3 rounded-lg bg-card border">
-              <p className="font-medium">2. Agrega contactos</p>
-              <p className="text-xs text-muted-foreground mt-1">Ve a Contactos o usa <code className="bg-muted px-1 rounded">/add-lead</code></p>
+              <p className="font-medium">2. Adicione contatos</p>
+              <p className="text-xs text-muted-foreground mt-1">Vá a Contatos ou use <code className="bg-muted px-1 rounded">/add-lead</code></p>
             </div>
             <div className="p-3 rounded-lg bg-card border">
-              <p className="font-medium">3. Carga datos demo</p>
-              <p className="text-xs text-muted-foreground mt-1">Ejecuta <code className="bg-muted px-1 rounded">npm run seed</code> en terminal</p>
+              <p className="font-medium">3. Carregue dados demo</p>
+              <p className="text-xs text-muted-foreground mt-1">Execute <code className="bg-muted px-1 rounded">npm run seed</code> no terminal</p>
             </div>
           </div>
         </div>

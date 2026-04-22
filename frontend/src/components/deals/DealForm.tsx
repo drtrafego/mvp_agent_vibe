@@ -25,9 +25,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const dealSchema = z.object({
-  title: z.string().min(1, "El titulo es requerido"),
+  title: z.string().min(1, "O título é obrigatório"),
   value: z.string(),
-  contactId: z.string().min(1, "El contacto es requerido"),
+  contactId: z.string().min(1, "O contato é obrigatório"),
   stageId: z.string(),
   probability: z.string(),
   expectedClose: z.string(),
@@ -85,14 +85,14 @@ export function DealForm({ open, onClose }: DealFormProps) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error al crear deal");
+      if (!res.ok) throw new Error("Erro ao criar deal");
 
-      toast.success("Deal creado exitosamente");
+      toast.success("Deal criado com sucesso");
       reset();
       onClose();
       router.refresh();
     } catch {
-      toast.error("Error al crear el deal");
+      toast.error("Erro ao criar o deal");
     }
   };
 
@@ -100,13 +100,13 @@ export function DealForm({ open, onClose }: DealFormProps) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuevo Deal</DialogTitle>
+          <DialogTitle>Novo Deal</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="deal-title">Titulo *</Label>
-            <Input id="deal-title" {...register("title")} placeholder="Ej: Servicio Premium - Empresa X" />
+            <Label htmlFor="deal-title">Título *</Label>
+            <Input id="deal-title" {...register("title")} placeholder="Ex: Serviço Premium - Empresa X" />
             {errors.title && (
               <p className="text-xs text-destructive">{errors.title.message}</p>
             )}
@@ -114,7 +114,7 @@ export function DealForm({ open, onClose }: DealFormProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="deal-value">Valor (MXN)</Label>
+              <Label htmlFor="deal-value">Valor (R$)</Label>
               <Input
                 id="deal-value"
                 type="number"
@@ -124,7 +124,7 @@ export function DealForm({ open, onClose }: DealFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Probabilidad (%)</Label>
+              <Label>Probabilidade (%)</Label>
               <Input
                 type="number"
                 min="0"
@@ -135,13 +135,13 @@ export function DealForm({ open, onClose }: DealFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Contacto *</Label>
+            <Label>Contato *</Label>
             <Select
               value={watch("contactId")}
               onValueChange={(v) => v && setValue("contactId", v)}
             >
               <SelectTrigger className="cursor-pointer">
-                <SelectValue placeholder="Seleccionar contacto" />
+                <SelectValue placeholder="Selecionar contato" />
               </SelectTrigger>
               <SelectContent>
                 {contactsList.map((c) => (
@@ -164,7 +164,7 @@ export function DealForm({ open, onClose }: DealFormProps) {
                 onValueChange={(v) => v && setValue("stageId", v)}
               >
                 <SelectTrigger className="cursor-pointer">
-                  <SelectValue placeholder="Primera etapa" />
+                  <SelectValue placeholder="Primeira etapa" />
                 </SelectTrigger>
                 <SelectContent>
                   {stagesList.map((s) => (
@@ -176,7 +176,7 @@ export function DealForm({ open, onClose }: DealFormProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Cierre estimado</Label>
+              <Label>Fechamento estimado</Label>
               <Input type="date" {...register("expectedClose")} />
             </div>
           </div>
@@ -191,7 +191,7 @@ export function DealForm({ open, onClose }: DealFormProps) {
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
-              {isSubmitting ? "Creando..." : "Crear Deal"}
+              {isSubmitting ? "Criando..." : "Criar Deal"}
             </Button>
           </div>
         </form>

@@ -50,7 +50,7 @@ export default function DealsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Deals</h1>
           <p className="text-muted-foreground">
-            Oportunidades de venta activas
+            Oportunidades de venda ativas
           </p>
         </div>
         <div className="flex gap-2">
@@ -64,7 +64,7 @@ export default function DealsPage() {
           </Button>
           <Button onClick={() => setShowForm(true)} className="cursor-pointer">
             <Plus className="h-4 w-4 mr-2" />
-            Nuevo Deal
+            Novo Deal
           </Button>
         </div>
       </div>
@@ -78,9 +78,9 @@ export default function DealsPage() {
       ) : deals.length === 0 ? (
         <EmptyState
           icon={Briefcase}
-          title="No hay deals"
-          description="Crea tu primer deal para comenzar a gestionar tu pipeline."
-          actionLabel="Crear deal"
+          title="Nenhum deal"
+          description="Crie seu primeiro deal para começar a gerenciar seu pipeline."
+          actionLabel="Criar deal"
           onAction={() => setShowForm(true)}
         />
       ) : (
@@ -88,12 +88,12 @@ export default function DealsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Titulo</TableHead>
-                <TableHead>Contacto</TableHead>
+                <TableHead>Título</TableHead>
+                <TableHead>Contato</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Etapa</TableHead>
-                <TableHead className="hidden md:table-cell">Probabilidad</TableHead>
-                <TableHead className="hidden lg:table-cell">Cierre est.</TableHead>
+                <TableHead className="hidden md:table-cell">Probabilidade</TableHead>
+                <TableHead className="hidden lg:table-cell">Fechamento est.</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

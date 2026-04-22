@@ -89,8 +89,8 @@ export default function ActivitiesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Actividades</h1>
           <p className="text-muted-foreground">
-            Historial de interacciones y seguimientos pendientes
-        </p>
+            Histórico de interações e acompanhamentos pendentes
+          </p>
         </div>
         <Button onClick={() => setShowForm(true)} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" />
@@ -135,7 +135,7 @@ export default function ActivitiesPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2" style={{ color: "var(--warning)" }}>
                   <Clock className="h-4 w-4" />
-                  Hoy ({followUps.today.length})
+                  Hoje ({followUps.today.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -156,14 +156,14 @@ export default function ActivitiesPage() {
       {/* All activities timeline */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Todas las Actividades</CardTitle>
+          <CardTitle className="text-base">Todas as Atividades</CardTitle>
         </CardHeader>
         <CardContent>
           {allActivities.length === 0 ? (
             <EmptyState
               icon={Activity}
-              title="No hay actividades"
-              description="Las actividades aparecen cuando registras llamadas, emails, reuniones o notas."
+              title="Nenhuma atividade"
+              description="As atividades aparecem quando você registra ligações, emails, reuniões ou notas."
             />
           ) : (
             <div className="space-y-4">

@@ -21,7 +21,7 @@ export function NotificationToggle() {
 
   const toggle = async () => {
     if (!supported) {
-      toast.error("Tu navegador no soporta notificaciones");
+      toast.error("Seu navegador não suporta notificações");
       return;
     }
 
@@ -30,19 +30,18 @@ export function NotificationToggle() {
       if (permission === "granted") {
         localStorage.setItem("crm-notifications", "true");
         setEnabled(true);
-        toast.success("Notificaciones activadas");
+        toast.success("Notificações ativadas");
 
-        // Show test notification
         new Notification("Auto-CRM", {
-          body: "Las notificaciones estan activas. Te avisaremos de seguimientos pendientes.",
+          body: "As notificações estão ativas. Você será avisado sobre acompanhamentos pendentes.",
         });
       } else {
-        toast.error("Permiso de notificaciones denegado");
+        toast.error("Permissão de notificações negada");
       }
     } else {
       localStorage.setItem("crm-notifications", "false");
       setEnabled(false);
-      toast.success("Notificaciones desactivadas");
+      toast.success("Notificações desativadas");
     }
   };
 
@@ -58,12 +57,12 @@ export function NotificationToggle() {
         )}
         <div>
           <p className="text-sm font-medium">
-            Notificaciones del navegador
+            Notificações do navegador
           </p>
           <p className="text-xs text-muted-foreground">
             {enabled
-              ? "Recibiras alertas de seguimientos vencidos"
-              : "Activa para recibir alertas de seguimientos"}
+              ? "Você receberá alertas de acompanhamentos vencidos"
+              : "Ative para receber alertas de acompanhamentos"}
           </p>
         </div>
       </div>
@@ -73,7 +72,7 @@ export function NotificationToggle() {
         onClick={toggle}
         className="cursor-pointer"
       >
-        {enabled ? "Desactivar" : "Activar"}
+        {enabled ? "Desativar" : "Ativar"}
       </Button>
     </div>
   );

@@ -26,8 +26,8 @@ import { toast } from "sonner";
 
 const activitySchema = z.object({
   type: z.enum(["call", "email", "meeting", "note", "follow_up"]),
-  description: z.string().min(1, "La descripcion es requerida"),
-  contactId: z.string().min(1, "El contacto es requerido"),
+  description: z.string().min(1, "A descrição é obrigatória"),
+  contactId: z.string().min(1, "O contato é obrigatório"),
   dealId: z.string(),
   scheduledAt: z.string(),
 });
@@ -90,14 +90,14 @@ export function ActivityForm({
         }),
       });
 
-      if (!res.ok) throw new Error("Error al crear actividad");
+      if (!res.ok) throw new Error("Erro ao criar atividade");
 
-      toast.success("Actividad registrada");
+      toast.success("Atividade registrada");
       reset();
       onClose();
       router.refresh();
     } catch {
-      toast.error("Error al registrar la actividad");
+      toast.error("Erro ao registrar a atividade");
     }
   };
 
@@ -105,7 +105,7 @@ export function ActivityForm({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Registrar Actividad</DialogTitle>
+          <DialogTitle>Registrar Atividade</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -121,21 +121,21 @@ export function ActivityForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="call">Llamada</SelectItem>
+                <SelectItem value="call">Ligação</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="meeting">Reunion</SelectItem>
+                <SelectItem value="meeting">Reunião</SelectItem>
                 <SelectItem value="note">Nota</SelectItem>
-                <SelectItem value="follow_up">Seguimiento</SelectItem>
+                <SelectItem value="follow_up">Acompanhamento</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="activity-desc">Descripcion *</Label>
+            <Label htmlFor="activity-desc">Descrição *</Label>
             <Textarea
               id="activity-desc"
               {...register("description")}
-              placeholder="Que sucedio o que necesitas hacer?"
+              placeholder="O que aconteceu ou o que precisa fazer?"
               rows={3}
             />
             {errors.description && (
@@ -147,13 +147,13 @@ export function ActivityForm({
 
           {!preselectedContactId && (
             <div className="space-y-2">
-              <Label>Contacto *</Label>
+              <Label>Contato *</Label>
               <Select
                 value={watch("contactId")}
                 onValueChange={(v) => v && setValue("contactId", v)}
               >
                 <SelectTrigger className="cursor-pointer">
-                  <SelectValue placeholder="Seleccionar contacto" />
+                  <SelectValue placeholder="Selecionar contato" />
                 </SelectTrigger>
                 <SelectContent>
                   {contactsList.map((c) => (
@@ -173,7 +173,7 @@ export function ActivityForm({
 
           {watch("type") === "follow_up" && (
             <div className="space-y-2">
-              <Label>Fecha programada</Label>
+              <Label>Data programada</Label>
               <Input type="datetime-local" {...register("scheduledAt")} />
             </div>
           )}
@@ -192,7 +192,7 @@ export function ActivityForm({
               disabled={isSubmitting}
               className="cursor-pointer"
             >
-              {isSubmitting ? "Guardando..." : "Registrar"}
+              {isSubmitting ? "Salvando..." : "Registrar"}
             </Button>
           </div>
         </form>
