@@ -121,11 +121,17 @@ async def process_phone(phone: str, data: dict) -> None:
             from output.sender import send_message
             from memory.chat import save_messages
 
+            logger.info("Resposta gerada: phone=%s text=%r", phone, response[:300])
             sent = await send_message(phone, response)
             if sent:
                 await save_messages(phone, text, response)
             else:
                 logger.error("Falha ao enviar resposta para %s", phone)
+                # Salva mesmo com falha de envio para diagnostico
+                try:
+                    await save_messages(phone, text, response)
+                except Exception:
+                    pass
         else:
             logger.warning("Agente retornou resposta vazia para %s", phone)
 
