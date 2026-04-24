@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from config.settings import settings
@@ -18,9 +18,15 @@ SLOT_HOURS = [10, 11, 12, 13, 14, 15]
 
 
 def _build_service():
-    sa_info = json.loads(settings.GOOGLE_SERVICE_ACCOUNT_JSON)
-    creds = service_account.Credentials.from_service_account_info(sa_info, scopes=SCOPES)
-    return build("calendar", "v3", credentials=creds)
+    creds = Credentials(
+        token=None,
+        refresh_token=settings.GOOGLE_OAUTH_REFRESH_TOKEN,
+        client_id=settings.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret=settings.GOOGLE_OAUTH_CLIENT_SECRET,
+        token_uri="https://oauth2.googleapis.com/token",
+        scopes=SCOPES,
+    )
+    return build("calendar", "v3", credentials=creds, cache_discovery=False)
 
 
 def _find_slots(days_ahead: int = 3) -> list[datetime]:
@@ -98,9 +104,10 @@ def _create_event_sync(name: str, email: str, iso_datetime: str, title: str) -> 
 
     event_body = {
         "summary": title,
-        "description": f"Lead: {name}\nEmail: {email}\n\nConvide o lead manualmente neste evento.",
+        "description": f"Lead: {name}\nEmail: {email}",
         "start": {"dateTime": start.isoformat(), "timeZone": "America/Sao_Paulo"},
         "end": {"dateTime": end.isoformat(), "timeZone": "America/Sao_Paulo"},
+        "attendees": [{"email": email, "displayName": name}],
     }
 
     created = (
@@ -108,6 +115,7 @@ def _create_event_sync(name: str, email: str, iso_datetime: str, title: str) -> 
         .insert(
             calendarId=settings.GOOGLE_CALENDAR_ID,
             body=event_body,
+            sendUpdates="all",
         )
         .execute()
     )
