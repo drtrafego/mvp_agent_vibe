@@ -25,7 +25,12 @@ _pool: Optional[asyncpg.Pool] = None
 async def _get_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(settings.DATABASE_URL, min_size=1, max_size=5)
+        _pool = await asyncpg.create_pool(
+            settings.DATABASE_URL,
+            min_size=1,
+            max_size=5,
+            statement_cache_size=0,
+        )
     return _pool
 
 
@@ -40,8 +45,8 @@ async def get_contact(phone: str) -> dict:
 
     result = await pool.fetchrow(
         """
-        INSERT INTO agente_vibe.contacts (phone, name, stage, followup_count)
-        VALUES ($1, $2, 'novo', 0)
+        INSERT INTO agente_vibe.contacts (id, phone, name, stage, followup_count)
+        VALUES (gen_random_uuid()::text, $1, $2, 'novo', 0)
         ON CONFLICT (phone) WHERE phone IS NOT NULL DO UPDATE SET phone = EXCLUDED.phone
         RETURNING *
         """,
