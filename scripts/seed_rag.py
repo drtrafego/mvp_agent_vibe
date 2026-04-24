@@ -26,7 +26,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
-EMBED_MODEL = "models/embedding-001"
+EMBED_MODEL = "models/gemini-embedding-001"
 TABLE = "documents"
 DELAY_ENTRE_INSERTS = 0.3  # segundos, respeita rate limit do Gemini
 

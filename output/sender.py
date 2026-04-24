@@ -1,7 +1,7 @@
 """
 output/sender.py
 
-Envia respostas do agente ao lead via endpoint bot-send do Next.js.
+Envia respostas do agente diretamente via Meta Cloud API (WhatsApp).
 
 Comportamento:
 - Mensagens <= 1500 chars: enviadas em um unico POST.
@@ -147,45 +147,50 @@ def _split_by_words(text: str, max_len: int) -> list[str]:
     return parts
 
 
+META_SEND_URL = "https://graph.facebook.com/v21.0/{phone_number_id}/messages"
+
+
 async def _post_single(client: httpx.AsyncClient, phone: str, text: str) -> bool:
     """
-    Envia um unico chunk via bot-send com retry 3x e backoff 2s.
+    Envia um unico chunk direto via Meta Cloud API com retry 3x e backoff 2s.
     Retorna True se enviou com sucesso, False se todas as tentativas falharam.
     """
+    url = META_SEND_URL.format(phone_number_id=settings.META_PHONE_NUMBER_ID)
     headers = {
-        "Authorization": f"Bearer {settings.BOT_SEND_TOKEN}",
+        "Authorization": f"Bearer {settings.META_ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
-    payload = {"phone": phone, "message": text}
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": phone,
+        "type": "text",
+        "text": {"body": text},
+    }
 
     for attempt in range(1, RETRY_ATTEMPTS + 1):
         try:
-            response = await client.post(
-                settings.BOT_SEND_URL,
-                json=payload,
-                headers=headers,
-            )
+            response = await client.post(url, json=payload, headers=headers)
             if response.status_code == 200:
                 logger.info(
-                    "bot-send ok: phone=%s tentativa=%d status=%d",
+                    "meta-send ok: phone=%s tentativa=%d",
                     phone,
                     attempt,
-                    response.status_code,
                 )
                 return True
 
             logger.warning(
-                "bot-send status inesperado: phone=%s tentativa=%d status=%d body=%s",
+                "meta-send status inesperado: phone=%s tentativa=%d status=%d body=%s",
                 phone,
                 attempt,
                 response.status_code,
                 response.text[:200],
             )
         except httpx.TimeoutException:
-            logger.warning("bot-send timeout: phone=%s tentativa=%d", phone, attempt)
+            logger.warning("meta-send timeout: phone=%s tentativa=%d", phone, attempt)
         except httpx.RequestError as exc:
             logger.warning(
-                "bot-send erro de conexao: phone=%s tentativa=%d erro=%s",
+                "meta-send erro de conexao: phone=%s tentativa=%d erro=%s",
                 phone,
                 attempt,
                 exc,
@@ -195,7 +200,7 @@ async def _post_single(client: httpx.AsyncClient, phone: str, text: str) -> bool
             await asyncio.sleep(RETRY_BACKOFF)
 
     logger.error(
-        "bot-send falhou apos %d tentativas: phone=%s", RETRY_ATTEMPTS, phone
+        "meta-send falhou apos %d tentativas: phone=%s", RETRY_ATTEMPTS, phone
     )
     return False
 

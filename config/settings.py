@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     GOOGLE_CALENDAR_ID: str = "primary"
     GOOGLE_SERVICE_ACCOUNT_JSON: str = ""  # JSON string
 
-    # Output
-    BOT_SEND_URL: str
+    # Output (legado — agente envia direto via Meta API)
+    BOT_SEND_URL: str = ""
     BOT_SEND_TOKEN: str = ""
 
     # Notify
