@@ -7,3 +7,12 @@ venv/
 *.db
 .DS_Store
 sdr_prompt_raw.txt
+
+# Scripts locais (não vão pro repo)
+test_webhook.py
+test_batch.py
+test_bookings.py
+test_hourly.py
+send_to_user.py
+oauth_flow.py
+.claude/
