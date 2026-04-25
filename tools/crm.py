@@ -19,6 +19,8 @@ VALID_STAGES = [
     "bloqueado",
 ]
 
+VALID_TEMPERATURES = ["cold", "warm", "hot"]
+
 _pool: Optional[asyncpg.Pool] = None
 
 
@@ -107,3 +109,30 @@ async def mark_bot_message(phone: str) -> None:
         "UPDATE agente_vibe.contacts SET last_bot_msg_at = now(), updated_at = now() WHERE phone = $1",
         phone,
     )
+
+
+async def update_lead_profile(
+    phone: str,
+    nicho: str | None = None,
+    stage: str | None = None,
+    temperature: str | None = None,
+) -> None:
+    """Atualiza perfil do lead. Stages só avançam (não regridem se ja em estado superior)."""
+    updates: dict = {}
+    if nicho:
+        updates["nicho"] = nicho
+    if stage and stage in VALID_STAGES:
+        updates["stage"] = stage
+    if temperature and temperature in VALID_TEMPERATURES:
+        updates["temperature"] = temperature
+    if not updates:
+        return
+
+    pool = await _get_pool()
+    sets = ", ".join(f"{k} = ${i+2}" for i, k in enumerate(updates))
+    values = list(updates.values())
+    await pool.execute(
+        f"UPDATE agente_vibe.contacts SET {sets}, updated_at = now() WHERE phone = $1",
+        phone, *values,
+    )
+    logger.info("Lead profile atualizado: phone=%s updates=%s", phone, updates)

@@ -23,7 +23,7 @@ Você não segue script. Você é uma consultora que escuta, diagnostica e prop�
 
 ANTES DE QUALQUER RESPOSTA, USE SUAS FERRAMENTAS.
 
-Você tem 4 ferramentas e deve usar TODAS conforme necessário:
+Você tem 5 ferramentas e deve usar TODAS conforme necessário:
 
 1. Supabase Vector Store (RAG). Sua base de conhecimento sobre produto, cases por nicho, objeções com argumentos técnicos, benefícios comerciais, diferenciais e oferta. CONSULTE ANTES DE RESPONDER sempre que:
    o lead mencionar o nicho dele (mesmo que você ache que sabe, busca o case real do nicho);
@@ -39,6 +39,12 @@ Você tem 4 ferramentas e deve usar TODAS conforme necessário:
 3. observacoes_sdr. Depois de CADA resposta sua, salva uma linha curta com o que você aprendeu nessa troca: nicho, dor específica, sinal de interesse, objeção, contexto do negócio.
 
 4. agente_google_agenda. Chame SOMENTE depois que o lead aceitou a call e passou o email. Use pra buscar horários disponíveis e criar eventos.
+
+5. update_lead_profile. Atualiza o CRM com nicho, stage e temperatura do lead. Chame quando:
+   - Descobrir o nicho/segmento → passe nicho + stage="qualificando" + temperature="warm".
+   - Lead demonstra interesse forte, faz perguntas detalhadas ou aceita ouvir a call → stage="interesse" + temperature="hot".
+   - Lead recusou de vez, pediu pra tirar do contato → stage="sem_interesse".
+   - Não chame quando agendar — criar evento já marca stage="agendado" sozinho.
 
 COMO VOCÊ ESCREVE NO WHATSAPP.
 
@@ -215,6 +221,26 @@ TOOLS: list[ToolDefinition] = [
             "required": ["name", "email", "iso_datetime", "title"],
         },
     ),
+    ToolDefinition(
+        name="update_lead_profile",
+        description=(
+            "Atualiza o perfil do lead no CRM. Use sempre que descobrir uma informação relevante.\n"
+            "Quando chamar:\n"
+            "- Descobriu o nicho/segmento → passe nicho + stage='qualificando' + temperature='warm'.\n"
+            "- Lead se mostrou interessado, fez perguntas detalhadas ou aceitou ouvir sobre a call → stage='interesse' + temperature='hot'.\n"
+            "- Lead recusou explicitamente, disse que não tem interesse, pediu para tirar do contato → stage='sem_interesse'.\n"
+            "Não precisa chamar quando agenda (criar evento já marca stage=agendado automaticamente)."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "nicho": {"type": "string", "description": "Nicho/segmento do lead, ex: clinica medica, imobiliaria, e-commerce"},
+                "stage": {"type": "string", "description": "Stage CRM: qualificando, interesse, sem_interesse"},
+                "temperature": {"type": "string", "description": "Temperatura: cold, warm, hot"},
+            },
+            "required": [],
+        },
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -240,6 +266,16 @@ async def execute_tool(name: str, args: dict, phone: str) -> str:
             from tools.crm import append_observation
             await append_observation(phone, args["observation"])
             return "Observação salva."
+
+        if name == "update_lead_profile":
+            from tools.crm import update_lead_profile
+            await update_lead_profile(
+                phone,
+                nicho=args.get("nicho"),
+                stage=args.get("stage"),
+                temperature=args.get("temperature"),
+            )
+            return "Perfil atualizado."
 
         if name == "get_calendar_slots":
             from tools.calendar import get_available_slots
