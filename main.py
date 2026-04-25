@@ -52,11 +52,23 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.error("Erro ao verificar tabela chat_sessions: %s", exc)
 
-    logger.info("Agente pronto (modo serverless)")
+    # Inicia scheduler de follow-up (Railway = processo persistente)
+    try:
+        from followup.scheduler import start_scheduler
+        start_scheduler()
+    except Exception as exc:
+        logger.error("Erro ao iniciar scheduler de follow-up: %s", exc)
+
+    logger.info("Agente pronto")
 
     yield
 
     # --- Shutdown ---
+    try:
+        from followup.scheduler import stop_scheduler
+        stop_scheduler()
+    except Exception:
+        pass
     logger.info("Encerrando agente...")
 
 

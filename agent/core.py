@@ -247,6 +247,7 @@ async def execute_tool(name: str, args: dict, phone: str) -> str:
 
         if name == "create_calendar_event":
             from tools.calendar import create_event
+            from tools.crm import advance_stage, update_contact
             from tools.notify import notify_appointment
             event = await create_event(
                 name=args["name"],
@@ -254,6 +255,12 @@ async def execute_tool(name: str, args: dict, phone: str) -> str:
                 iso_datetime=args["iso_datetime"],
                 title=args["title"],
             )
+            # Marca lead como agendado (exclui de follow-ups futuros)
+            try:
+                await advance_stage(phone, "agendado")
+                await update_contact(phone, name=args["name"], email=args["email"])
+            except Exception as exc:
+                logger.error("Falha ao atualizar stage/contact após agendamento: %s", exc)
             await notify_appointment(event)
             return f"Evento criado: {event.get('htmlLink', 'sem link')}"
 

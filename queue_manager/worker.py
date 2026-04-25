@@ -113,6 +113,16 @@ async def process_phone(phone: str, data: dict) -> None:
 
         # Import lazy para evitar circular import com agent.core
         from agent import core as agent_core  # type: ignore[import]
+        from tools.crm import get_contact, update_contact, mark_bot_message
+        from datetime import datetime, timezone
+
+        # Garante contato existe e atualiza last_lead_msg_at
+        try:
+            await get_contact(phone)
+            now_iso = datetime.now(timezone.utc).isoformat()
+            await update_contact(phone, last_lead_msg_at=now_iso)
+        except Exception as exc:
+            logger.error("Falha ao atualizar last_lead_msg_at para %s: %s", phone, exc)
 
         logger.info("Processando mensagem: phone=%s type=%s", phone, data.get("type"))
         response = await agent_core.process_message(phone, text)
@@ -125,9 +135,12 @@ async def process_phone(phone: str, data: dict) -> None:
             sent = await send_message(phone, response)
             if sent:
                 await save_messages(phone, text, response)
+                try:
+                    await mark_bot_message(phone)
+                except Exception:
+                    pass
             else:
                 logger.error("Falha ao enviar resposta para %s", phone)
-                # Salva mesmo com falha de envio para diagnostico
                 try:
                     await save_messages(phone, text, response)
                 except Exception:
