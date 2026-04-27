@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 META_MEDIA_URL = "https://graph.facebook.com/v21.0/{media_id}"
 TRANSCRIBE_BASE = "https://api.transcrever.casaldotrafego.com"
-POLL_INTERVAL_S = 2
-POLL_TIMEOUT_S = 180  # 3 min max
+POLL_INTERVAL_S = 3
+POLL_TIMEOUT_S = 300  # 5 min max (Whisper pode demorar em audios longos)
 FALLBACK = "[Audio nao pode ser transcrito. O lead enviou um audio.]"
 
 

@@ -119,8 +119,7 @@ async def process_phone(phone: str, data: dict) -> None:
         # Garante contato existe e atualiza last_lead_msg_at
         try:
             await get_contact(phone)
-            now_iso = datetime.now(timezone.utc).isoformat()
-            await update_contact(phone, last_lead_msg_at=now_iso)
+            await update_contact(phone, last_lead_msg_at=datetime.now(timezone.utc))
         except Exception as exc:
             logger.error("Falha ao atualizar last_lead_msg_at para %s: %s", phone, exc)
 
