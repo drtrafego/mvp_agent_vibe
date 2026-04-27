@@ -139,6 +139,9 @@ async def webhook_receive(request: Request, background_tasks: BackgroundTasks) -
         # Evento de status de entrega ou outro sem mensagens — ignorar silenciosamente
         return PlainTextResponse("ok", status_code=200)
 
+    # AUDITORIA: log cada webhook com mensagem entrante (detecta duplicacao)
+    logger.info("[WEBHOOK_IN] %d msg(s): ids=%s", len(messages), [m.get("id","?")[:30] for m in messages])
+
     for msg in messages:
         phone_raw = msg.get("from", "")
         msg_id = msg.get("id", "")

@@ -133,6 +133,21 @@ class GeminiProvider(LLMProvider):
                 config=config,
             )
 
+            # AUDITORIA: log tokens consumidos em cada chamada
+            try:
+                um = response.usage_metadata
+                logger.info(
+                    "[GEMINI_USAGE] model=%s input=%s output=%s total=%s tools_count=%s history_len=%s",
+                    self._model_name,
+                    getattr(um, "prompt_token_count", "?"),
+                    getattr(um, "candidates_token_count", "?"),
+                    getattr(um, "total_token_count", "?"),
+                    len(tools) if tools else 0,
+                    len(messages),
+                )
+            except Exception:
+                pass
+
             if not response.candidates:
                 logger.warning("gemini: sem candidates na resposta")
                 return LLMResponse(content=_FALLBACK, finish_reason="error")
