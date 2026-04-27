@@ -18,6 +18,7 @@ import hmac
 import json
 import logging
 import re
+from collections import OrderedDict
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import PlainTextResponse
@@ -29,6 +30,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _DIGITS_RE = re.compile(r"\D")
+
+# Deduplicacao de msg_id da Meta: evita processar mesma mensagem 2x
+# (Meta pode reentregar webhook se nao receber 200 em tempo)
+_PROCESSED_MSG_IDS: "OrderedDict[str, bool]" = OrderedDict()
+_DEDUP_MAX_SIZE = 1000
+
+
+def _is_duplicate(msg_id: str) -> bool:
+    if not msg_id:
+        return False
+    if msg_id in _PROCESSED_MSG_IDS:
+        return True
+    _PROCESSED_MSG_IDS[msg_id] = True
+    if len(_PROCESSED_MSG_IDS) > _DEDUP_MAX_SIZE:
+        _PROCESSED_MSG_IDS.popitem(last=False)
+    return False
 
 
 async def _process_and_respond(phone: str, data: dict) -> None:
@@ -148,6 +165,11 @@ async def webhook_receive(request: Request, background_tasks: BackgroundTasks) -
         msg_type = msg.get("type", "")
 
         if not phone_raw:
+            continue
+
+        # IDEMPOTENCIA: ignora msg_id que ja foi processada
+        if _is_duplicate(msg_id):
+            logger.warning("[DEDUP] Mensagem duplicada ignorada: msg_id=%s phone=%s", msg_id, phone_raw)
             continue
 
         phone = _normalize_phone(phone_raw)
