@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   Kanban,
-  Activity,
   Settings,
   Briefcase,
   MessageSquare,
@@ -18,8 +17,6 @@ const navItems = [
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/contacts", label: "Contatos", icon: Users },
   { href: "/inbox", label: "Inbox", icon: MessageSquare },
-  { href: "/deals", label: "Deals", icon: Briefcase },
-  { href: "/activities", label: "Atividades", icon: Activity },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
