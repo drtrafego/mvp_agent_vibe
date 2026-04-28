@@ -20,10 +20,16 @@ import logging
 import re
 from collections import OrderedDict
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 
 from config.settings import settings
+
+# Backends de agentes adicionais: phone_number_id -> URL do backend
+AGENT_ROUTES: dict[str, str] = {
+    "414594695067374": "https://mvpagentvibetrafego-production.up.railway.app",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +89,31 @@ def _extract_messages(payload: dict) -> list[dict]:
         return value.get("messages", [])
     except (KeyError, IndexError, TypeError):
         return []
+
+
+def _extract_phone_number_id(payload: dict) -> str:
+    """Extrai o phone_number_id do metadata do payload Meta."""
+    try:
+        value = payload["entry"][0]["changes"][0]["value"]
+        return value.get("metadata", {}).get("phone_number_id", "")
+    except (KeyError, IndexError, TypeError):
+        return ""
+
+
+async def _forward_to_agent(url: str, body: bytes, headers: dict) -> None:
+    """Encaminha payload para outro backend de agente."""
+    forward_headers = {
+        "Content-Type": "application/json",
+    }
+    sig = headers.get("x-hub-signature-256") or headers.get("X-Hub-Signature-256")
+    if sig:
+        forward_headers["X-Hub-Signature-256"] = sig
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(f"{url}/webhook", content=body, headers=forward_headers)
+            logger.info("Forward para %s: status=%d", url, resp.status_code)
+    except Exception as exc:
+        logger.error("Falha ao encaminhar webhook para %s: %s", url, exc)
 
 
 def _verify_signature(secret: str, body: bytes, signature_header: str) -> bool:
@@ -156,6 +187,14 @@ async def webhook_receive(request: Request, background_tasks: BackgroundTasks) -
     except json.JSONDecodeError:
         logger.error("Payload invalido: nao e JSON valido")
         raise HTTPException(status_code=400, detail="Invalid JSON")
+
+    # Roteamento: encaminha para backend correto baseado no phone_number_id
+    phone_number_id = _extract_phone_number_id(payload)
+    if phone_number_id in AGENT_ROUTES:
+        target_url = AGENT_ROUTES[phone_number_id]
+        logger.info("Roteando webhook: phone_number_id=%s -> %s", phone_number_id, target_url)
+        background_tasks.add_task(_forward_to_agent, target_url, body, dict(request.headers))
+        return PlainTextResponse("ok", status_code=200)
 
     messages = _extract_messages(payload)
 
