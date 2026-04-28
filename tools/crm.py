@@ -133,7 +133,7 @@ async def save_origin(phone: str, referral: dict) -> None:
         try:
             parsed = urlparse(source_url)
             params = parse_qs(parsed.query)
-            for key in ("utm_source", "utm_medium", "utm_campaign", "utm_content"):
+            for key in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"):
                 val = params.get(key, [None])[0]
                 if val:
                     updates[key] = val

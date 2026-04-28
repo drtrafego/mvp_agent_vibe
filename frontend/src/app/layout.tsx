@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { NotificationChecker } from "@/components/shared/NotificationChecker";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -26,17 +27,19 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex" suppressHydrationWarning>
-        <TooltipProvider>
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1 p-4 md:p-6 bg-background overflow-auto">
-              {children}
-            </main>
-          </div>
-          <Toaster />
-          <NotificationChecker />
-        </TooltipProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <TooltipProvider>
+            <Sidebar />
+            <div className="flex-1 flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-1 p-4 md:p-6 bg-background overflow-auto">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+            <NotificationChecker />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -14,18 +14,20 @@ export async function GET() {
         c.bot_active,
         c.stage,
         c.temperature,
-        last_msg.content  AS last_message,
-        last_msg.role     AS last_role,
-        last_msg.created_at AS last_message_at
+        last_msg.content    AS last_message,
+        last_msg.role       AS last_role,
+        COALESCE(last_msg.created_at, c.last_lead_msg_at, c.created_at) AS last_message_at
       FROM agente_vibe.contacts c
-      INNER JOIN LATERAL (
+      LEFT JOIN LATERAL (
         SELECT content, role, created_at
         FROM agente_vibe.chat_sessions
         WHERE phone = c.phone
         ORDER BY created_at DESC
         LIMIT 1
       ) last_msg ON true
-      ORDER BY last_msg.created_at DESC
+      WHERE c.phone IS NOT NULL
+        AND (last_msg.content IS NOT NULL OR c.last_lead_msg_at IS NOT NULL)
+      ORDER BY COALESCE(last_msg.created_at, c.last_lead_msg_at, c.created_at) DESC
       LIMIT 50
     `);
 

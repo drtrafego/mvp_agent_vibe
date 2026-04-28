@@ -41,6 +41,7 @@ export default async function ContactDetailPage({
     utmMedium: contact.utmMedium ?? null,
     utmCampaign: contact.utmCampaign ?? null,
     utmContent: contact.utmContent ?? null,
+    utmTerm: contact.utmTerm ?? null,
   };
 
   return (

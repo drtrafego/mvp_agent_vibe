@@ -75,19 +75,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
       <div className={bubbleClass}>
         {message.message_type === "audio" && message.media_id ? (
-          <div className="flex flex-col gap-1.5">
-            <audio
-              controls
-              preload="none"
-              src={`/api/inbox/media/${message.media_id}`}
-              className="h-8 w-48 accent-indigo-400"
-            />
-            {message.content && (
-              <p className="whitespace-pre-wrap break-words text-xs opacity-80">
-                {message.content}
-              </p>
-            )}
-          </div>
+          <audio
+            controls
+            preload="none"
+            src={`/api/inbox/media/${message.media_id}`}
+            className="h-8 w-52"
+          />
         ) : (
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
         )}

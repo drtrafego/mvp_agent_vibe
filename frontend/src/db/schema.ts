@@ -30,6 +30,7 @@ export const contacts = agente_vibe.table("contacts", {
   utmMedium: text("utm_medium"),
   utmCampaign: text("utm_campaign"),
   utmContent: text("utm_content"),
+  utmTerm: text("utm_term"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

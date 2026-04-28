@@ -63,6 +63,7 @@ interface ContactDetailClientProps {
     utmMedium?: string | null;
     utmCampaign?: string | null;
     utmContent?: string | null;
+    utmTerm?: string | null;
   };
   deals: Array<{
     id: string;
@@ -273,7 +274,7 @@ export function ContactDetailClient({
         </Card>
 
         {/* Rastreamento de origem */}
-        {(contact.adName || contact.campaignName || contact.adsetName || contact.placement || contact.utmSource || contact.utmCampaign) && (
+        {(contact.adName || contact.campaignName || contact.adsetName || contact.placement || contact.utmSource || contact.utmCampaign || contact.utmTerm) && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
@@ -328,6 +329,12 @@ export function ContactDetailClient({
                 <div className="flex gap-2">
                   <span className="text-muted-foreground shrink-0 w-24">UTM Content</span>
                   <span className="font-medium">{contact.utmContent}</span>
+                </div>
+              )}
+              {contact.utmTerm && (
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground shrink-0 w-24">UTM Term</span>
+                  <span className="font-medium">{contact.utmTerm}</span>
                 </div>
               )}
               {contact.adId && (

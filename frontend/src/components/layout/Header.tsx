@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Bell, Menu } from "lucide-react";
+import { Search, Bell, Menu, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -9,6 +10,7 @@ import { MobileNav } from "./MobileNav";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -35,6 +37,16 @@ export function Header() {
         </div>
       </div>
 
+      <Button
+        variant="ghost"
+        size="icon"
+        className="cursor-pointer"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        aria-label="Alternar tema"
+      >
+        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      </Button>
       <Button variant="ghost" size="icon" className="relative cursor-pointer">
         <Bell className="h-5 w-5" />
       </Button>
