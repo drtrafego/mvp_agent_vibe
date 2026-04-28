@@ -25,6 +25,8 @@ export interface Contact {
   temperature: Temperature;
   score: number;
   notes: string | null;
+  nicho: string | null;
+  stage: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

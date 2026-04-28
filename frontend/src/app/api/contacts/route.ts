@@ -20,7 +20,15 @@ export async function GET(request: NextRequest) {
   if (source) query = query.where(eq(contacts.source, source)) as typeof query;
 
   const results = await query.orderBy(desc(contacts.createdAt));
-  return NextResponse.json(results);
+
+  const scored = results.map((c) => {
+    if (c.score !== 0) return c;
+    const base = c.temperature === "hot" ? 50 : c.temperature === "warm" ? 30 : 10;
+    const bonus = (c.email ? 10 : 0) + (c.phone ? 10 : 0) + (c.company ? 5 : 0);
+    return { ...c, score: Math.min(100, base + bonus) };
+  });
+
+  return NextResponse.json(scored);
 }
 
 export async function POST(request: NextRequest) {

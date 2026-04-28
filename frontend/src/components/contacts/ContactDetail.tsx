@@ -48,6 +48,8 @@ interface ContactDetailClientProps {
     temperature: string;
     score: number;
     notes: string | null;
+    nicho: string | null;
+    stage: string | null;
     createdAt: number | Date;
   };
   deals: Array<{
@@ -229,6 +231,20 @@ export function ContactDetailClient({
               <div className="flex items-center gap-2 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <span>{contact.company}</span>
+              </div>
+            )}
+            {contact.nicho && (
+              <div className="flex items-center gap-2 text-sm">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Nicho:</span>
+                <span className="font-medium">{contact.nicho}</span>
+              </div>
+            )}
+            {contact.stage && (
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Stage:</span>
+                <span className="font-medium capitalize">{contact.stage}</span>
               </div>
             )}
             <div className="flex items-center gap-2 text-sm">

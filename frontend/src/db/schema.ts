@@ -14,6 +14,8 @@ export const contacts = agente_vibe.table("contacts", {
   temperature: text("temperature").notNull().default("cold"),
   score: integer("score").notNull().default(0),
   notes: text("notes"),
+  nicho: text("nicho"),
+  stage: text("stage"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
