@@ -1,18 +1,18 @@
 """Sistema de follow-up.
 
 Regras:
-- Janela total: 72h após última mensagem do lead.
-- 5 follow-ups distribuídos: FU0 em 4h, FU1 em 24h, FU2 em 48h, FU3 em 60h, FU4 em 72h.
-- Stages elegíveis: 'novo', 'qualificando', 'interesse'.
-- Excluídos: 'agendado', 'realizada', 'sem_interesse', 'perdido', 'bloqueado'.
-- Bot não envia se respondeu ao lead nas últimas 1h (evita atropelar conversa em andamento).
+- Janela total: 72h apos ultima mensagem do lead (CTWA garante 72h se bot respondeu em 24h).
+- 6 follow-ups distribuidos: FU0 em 1h, FU1 em 4h, FU2 em 12h, FU3 em 24h, FU4 em 48h, FU5 em 60h.
+- Stages elegiveis: 'novo', 'qualificando', 'interesse'.
+- Bot nao envia se respondeu ao lead nas ultimas 1h (evita atropelar conversa ativa).
+- Usa asyncpg direto (consistente com o restante do projeto).
 """
 
 import logging
 from datetime import datetime, timezone, timedelta
 
+import asyncpg
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from supabase import create_client, Client
 
 from config.settings import settings
 from followup.templates import get_followup_message
@@ -21,116 +21,122 @@ logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 
-_supabase: Client | None = None
+_pool: asyncpg.Pool | None = None
 
-# Delay por contagem de follow-up (count -> horas após última msg do lead)
+# Delay por contagem de follow-up (count -> horas apos ultima msg do lead)
 FU_DELAYS_HOURS = {
     0: 1,   # FU0: 1h
     1: 4,   # FU1: 4h
     2: 12,  # FU2: 12h
     3: 24,  # FU3: 24h
     4: 48,  # FU4: 48h
-    5: 60,  # FU5: 60h (última)
+    5: 60,  # FU5: 60h (ultima)
 }
 
 ELIGIBLE_STAGES = ["novo", "qualificando", "interesse"]
 
 
-def _get_supabase() -> Client:
-    global _supabase
-    if _supabase is None:
-        _supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-    return _supabase
+async def _get_pool() -> asyncpg.Pool:
+    global _pool
+    if _pool is None:
+        _pool = await asyncpg.create_pool(
+            settings.DATABASE_URL,
+            min_size=1,
+            max_size=3,
+            statement_cache_size=0,
+        )
+    return _pool
 
 
-def _hours_ago_iso(hours: float) -> str:
-    return (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
-
-
-async def _send_followup(lead: dict, message: str) -> bool:
+async def _send_followup(phone: str, lead: dict, message: str) -> bool:
     """Envia follow-up via Meta Cloud API."""
     from output.sender import send_message
-    phone = lead["phone"]
     try:
         ok = await send_message(phone, message)
         if ok:
-            logger.info(
-                "Follow-up enviado: phone=%s count=%s", phone, lead.get("followup_count", 0)
-            )
+            logger.info("Follow-up enviado: phone=%s fu=%s", phone, lead.get("followup_count", 0))
+        else:
+            logger.warning("Follow-up FALHOU (send_message=False): phone=%s fu=%s", phone, lead.get("followup_count", 0))
         return ok
     except Exception as exc:
-        logger.error("Falha ao enviar follow-up para phone=%s: %s", phone, exc)
+        logger.error("Follow-up excecao: phone=%s: %s", phone, exc)
         return False
 
 
 async def run_followup() -> None:
-    """Busca leads elegíveis e envia follow-up."""
-    supabase = _get_supabase()
-    now_iso = datetime.now(timezone.utc).isoformat()
-    bot_cutoff = _hours_ago_iso(1)  # bot não respondeu na última 1h
+    """Busca leads elegiveis e envia follow-up via asyncpg."""
+    now = datetime.now(timezone.utc)
+    bot_cutoff = now - timedelta(hours=1)
 
     try:
-        result = (
-            supabase.schema("agente_vibe").table("contacts")
-            .select(
-                "phone, name, stage, nicho, observacoes_sdr, followup_count, "
-                "last_lead_msg_at, last_bot_msg_at"
-            )
-            .in_("stage", ELIGIBLE_STAGES)
-            .lt("followup_count", 6)
-            .not_.is_("phone", "null")
-            .not_.is_("last_lead_msg_at", "null")
-            .execute()
+        pool = await _get_pool()
+        rows = await pool.fetch(
+            """
+            SELECT phone, name, stage, nicho, observacoes_sdr,
+                   followup_count, last_lead_msg_at, last_bot_msg_at
+            FROM agente_vibe.contacts
+            WHERE stage = ANY($1)
+              AND COALESCE(followup_count, 0) < 6
+              AND phone IS NOT NULL
+              AND last_lead_msg_at IS NOT NULL
+            """,
+            ELIGIBLE_STAGES,
         )
-        all_leads = result.data or []
+        all_leads = [dict(r) for r in rows]
     except Exception as exc:
         logger.error("Erro ao buscar leads para follow-up: %s", exc)
         return
 
+    logger.info("Follow-up: %d leads candidatos encontrados", len(all_leads))
+
     eligible: list[dict] = []
     for lead in all_leads:
         count = lead.get("followup_count") or 0
-        last_lead = lead.get("last_lead_msg_at")
-        last_bot = lead.get("last_bot_msg_at")
+        last_lead: datetime | None = lead.get("last_lead_msg_at")
+        last_bot: datetime | None = lead.get("last_bot_msg_at")
 
-        # Bot respondeu nas últimas 1h → conversa ativa, pula
-        if last_bot and last_bot > bot_cutoff:
+        # Bot respondeu na ultima 1h — conversa ativa, pula
+        if last_bot and last_bot.replace(tzinfo=timezone.utc) > bot_cutoff:
             continue
 
-        # Calcula cutoff do count atual
         delay_h = FU_DELAYS_HOURS.get(count)
         if delay_h is None:
             continue
-        delay_cutoff = _hours_ago_iso(delay_h)
 
-        # Lead precisa ter mandado última msg antes do cutoff
-        if not last_lead or last_lead > delay_cutoff:
+        delay_cutoff = now - timedelta(hours=delay_h)
+
+        # Lead precisa ter ficado em silencio pelo tempo minimo
+        if not last_lead or last_lead.replace(tzinfo=timezone.utc) > delay_cutoff:
             continue
 
         eligible.append(lead)
 
+    logger.info("Follow-up: %d leads elegiveis de %d candidatos", len(eligible), len(all_leads))
+
     sent_count = 0
     for lead in eligible:
+        phone = lead["phone"]
         message = get_followup_message(lead)
         if message is None:
             continue
 
-        success = await _send_followup(lead, message)
+        success = await _send_followup(phone, lead, message)
         if not success:
             continue
 
-        phone = lead["phone"]
         new_count = (lead.get("followup_count") or 0) + 1
         try:
-            supabase.schema("agente_vibe").table("contacts").update(
-                {"followup_count": new_count, "last_bot_msg_at": now_iso}
-            ).eq("phone", phone).execute()
+            pool = await _get_pool()
+            await pool.execute(
+                "UPDATE agente_vibe.contacts SET followup_count = $2, last_bot_msg_at = $3, updated_at = now() WHERE phone = $1",
+                phone, new_count, now,
+            )
         except Exception as exc:
             logger.error("Falha ao atualizar followup_count para phone=%s: %s", phone, exc)
 
         sent_count += 1
 
-    logger.info("Ciclo de follow-up concluído: %d mensagens enviadas (avaliados=%d)", sent_count, len(all_leads))
+    logger.info("Ciclo de follow-up concluido: %d enviados / %d elegiveis / %d candidatos", sent_count, len(eligible), len(all_leads))
 
 
 def start_scheduler() -> None:
