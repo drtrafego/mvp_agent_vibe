@@ -1,40 +1,36 @@
 import { db } from "@/db";
-import { pipelineStages, deals, contacts } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
-import { KanbanBoard } from "@/components/pipeline/KanbanBoard";
-import type { PipelineColumn } from "@/types";
+import { contacts } from "@/db/schema";
+import { asc } from "drizzle-orm";
+import { LeadPipelineBoard } from "@/components/pipeline/LeadPipelineBoard";
 
 export const dynamic = "force-dynamic";
 
+const STAGES = [
+  { id: "novo", label: "Novo", color: "#64748b" },
+  { id: "qualificando", label: "Qualificando", color: "#3b82f6" },
+  { id: "interesse", label: "Interesse", color: "#f59e0b" },
+  { id: "agendado", label: "Agendado", color: "#8b5cf6" },
+  { id: "realizada", label: "Realizada", color: "#10b981" },
+  { id: "sem_interesse", label: "Sem interesse", color: "#ef4444" },
+  { id: "perdido", label: "Perdido", color: "#dc2626" },
+  { id: "bloqueado", label: "Bloqueado", color: "#1f2937" },
+];
+
 export default async function PipelinePage() {
-  const stages = await db.select().from(pipelineStages).orderBy(asc(pipelineStages.order));
+  const allContacts = await db.select().from(contacts).orderBy(asc(contacts.createdAt));
 
-  const allDeals = await db.select({
-    id: deals.id, title: deals.title, value: deals.value, stageId: deals.stageId,
-    contactId: deals.contactId, expectedClose: deals.expectedClose,
-    probability: deals.probability, notes: deals.notes,
-    createdAt: deals.createdAt, updatedAt: deals.updatedAt,
-    contactName: contacts.name, contactTemperature: contacts.temperature,
-  }).from(deals).leftJoin(contacts, eq(deals.contactId, contacts.id));
-
-  const columns: PipelineColumn[] = stages.map((stage) => ({
+  const columns = STAGES.map((stage) => ({
     ...stage,
-    deals: allDeals.filter((d) => d.stageId === stage.id).map((d) => ({
-      id: d.id, title: d.title, value: d.value, stageId: d.stageId,
-      contactId: d.contactId, expectedClose: d.expectedClose,
-      probability: d.probability, notes: d.notes,
-      createdAt: d.createdAt, updatedAt: d.updatedAt,
-      contactName: d.contactName, contactTemperature: d.contactTemperature,
-    })) as PipelineColumn["deals"],
+    contacts: allContacts.filter((c) => (c.stage || "novo") === stage.id),
   }));
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Pipeline</h1>
-        <p className="text-muted-foreground">Arraste e solte deals entre etapas</p>
+        <h1 className="text-2xl font-bold tracking-tight">Pipeline de Leads</h1>
+        <p className="text-muted-foreground">Leads organizados por etapa. O bot move automaticamente conforme a conversa evolui.</p>
       </div>
-      <KanbanBoard initialColumns={columns} />
+      <LeadPipelineBoard initialColumns={columns} />
     </div>
   );
 }
