@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Briefcase,
@@ -12,16 +14,27 @@ import {
   Webhook,
   Bell,
   Copy,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { NotificationToggle } from "@/components/shared/NotificationToggle";
 import type { CrmConfig } from "@/types";
+
+const THEME_OPTIONS = [
+  { value: "light", label: "Claro", icon: Sun },
+  { value: "dark", label: "Escuro", icon: Moon },
+  { value: "system", label: "Sistema", icon: Monitor },
+] as const;
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<CrmConfig | null>(null);
   const [stages, setStages] = useState<
     Array<{ id: string; name: string; color: string; order: number }>
   >([]);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     fetch("/crm-config.json")
@@ -71,6 +84,38 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Tema */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sun className="h-4 w-4" />
+              Aparência
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Escolha entre tema claro, escuro ou seguir a preferência do sistema.
+            </p>
+            <div className="flex gap-2">
+              {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                <Button
+                  key={value}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTheme(value)}
+                  className={cn(
+                    "flex-1 flex flex-col gap-1.5 h-auto py-3 cursor-pointer",
+                    theme === value && "border-primary bg-primary/5 text-primary"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="text-xs">{label}</span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Business config */}
         <Card>
           <CardHeader>
