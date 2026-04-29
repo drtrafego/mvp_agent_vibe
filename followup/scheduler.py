@@ -15,7 +15,6 @@ import asyncpg
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config.settings import settings
-from followup.templates import get_followup_message
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +45,61 @@ async def _get_pool() -> asyncpg.Pool:
             statement_cache_size=0,
         )
     return _pool
+
+
+async def _generate_followup(phone: str, lead: dict, count: int) -> str | None:
+    """Gera mensagem de follow-up via LLM com base no histórico real da conversa."""
+    try:
+        from memory.chat import get_history
+        from agent.providers.factory import get_provider
+
+        history = await get_history(phone)
+
+        nicho = (lead.get("nicho") or "").strip()
+        obs = (lead.get("observacoes_sdr") or "").strip()
+        name = (lead.get("name") or "").strip()
+        # Usa primeiro nome se parece nome real
+        if name and not name.lstrip("+").isdigit() and name[0].isupper() and len(name) >= 3:
+            nome = name.split()[0]
+        else:
+            nome = ""
+
+        tentativa = count + 1
+        max_tentativas = 6
+
+        system = (
+            "Você é um agente SDR do Casal do Tráfego fazendo follow-up no WhatsApp. "
+            "O lead parou de responder. Gere UMA mensagem curta de follow-up (1 a 2 frases) "
+            "para retomar o contato de forma natural e humana, sem pitch, sem asterisco, sem travessão. "
+            "Base sua mensagem EXATAMENTE em onde a conversa parou — não finja que houve mais troca do que houve. "
+            "Se o lead mal começou a conversa, convide-o a continuar. "
+            "Se já avançou bastante, retome o ponto específico. "
+            f"Esta é a tentativa {tentativa} de {max_tentativas}. "
+            + (f"Nicho do lead: {nicho}. " if nicho else "")
+            + (f"Observações: {obs}. " if obs else "")
+            + (f"Nome do lead: {nome}. " if nome else "")
+            + "Responda APENAS com o texto da mensagem, sem explicação, sem aspas."
+        )
+
+        if not history:
+            messages = [{"role": "user", "content": "[Lead entrou em contato mas não houve conversa ainda]"}]
+        else:
+            messages = history[-6:]  # últimas 6 mensagens para contexto
+
+        provider = get_provider()
+        response = await provider.generate(system=system, messages=messages, tools=[])
+
+        text = (response.content or "").strip()
+        if text:
+            logger.info("Follow-up gerado pelo LLM: phone=%s fu=%d texto=%r", phone, count, text[:100])
+            return text
+
+    except Exception as exc:
+        logger.error("Erro ao gerar follow-up via LLM: phone=%s fu=%d: %s", phone, count, exc)
+
+    # Fallback para template se LLM falhar
+    from followup.templates import get_followup_message
+    return get_followup_message(lead)
 
 
 async def _send_followup(phone: str, lead: dict, message: str) -> bool:
@@ -116,7 +170,8 @@ async def run_followup() -> None:
     sent_count = 0
     for lead in eligible:
         phone = lead["phone"]
-        message = get_followup_message(lead)
+        count = lead.get("followup_count") or 0
+        message = await _generate_followup(phone, lead, count)
         if message is None:
             continue
 
