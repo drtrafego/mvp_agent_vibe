@@ -131,6 +131,11 @@ async def run_followup() -> None:
                 "UPDATE agente_vibe.contacts SET followup_count = $2, last_bot_msg_at = $3, updated_at = now() WHERE phone = $1",
                 phone, new_count, now,
             )
+            # Grava no chat_sessions para aparecer no inbox
+            await pool.execute(
+                "INSERT INTO agente_vibe.chat_sessions (phone, role, content, message_type) VALUES ($1, 'assistant', $2, 'text')",
+                phone, message,
+            )
         except Exception as exc:
             logger.error("Falha ao atualizar followup_count para phone=%s: %s", phone, exc)
 
