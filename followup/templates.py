@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 def _first_name(lead: dict) -> str:
     name = (lead.get("name") or "").strip()
-    if not name:
+    # Se vazio ou parece número de telefone, não usa nome
+    if not name or name.lstrip("+").isdigit():
         return "Olá"
     return name.split()[0]
 
@@ -38,7 +39,7 @@ def get_followup_message(lead: dict) -> str | None:
     # Reagendamento: stage agendado sem show
     if count == 99:
         return (
-            f"{nome}, não te vi na call com o Gastão. "
+            f"{nome}, não te vi na call com o especialista. "
             "Aconteceu alguma coisa? Posso reagendar se quiser."
         )
 
