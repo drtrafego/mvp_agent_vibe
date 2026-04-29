@@ -259,6 +259,7 @@ async def webhook_receive(request: Request, background_tasks: BackgroundTasks) -
 
         # Rastreamento de origem: referral presente em Click-to-WhatsApp
         referral = msg.get("referral")
+        logger.info("[ORIGIN] phone=%s msg_type=%s referral_presente=%s referral=%s", phone, msg_type, bool(referral), referral)
         if referral:
             background_tasks.add_task(_save_origin_bg, phone, referral)
 

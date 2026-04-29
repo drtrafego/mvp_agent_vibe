@@ -152,15 +152,24 @@ async def save_origin(phone: str, referral: dict) -> None:
     if not updates:
         return
 
+    # Garante que o contato existe antes do UPDATE (evita race condition com novo lead)
+    await get_contact(phone)
+
     pool = await _get_pool()
-    # COALESCE preserva valor existente — nao sobrescreve origem ja registrada
-    sets = ", ".join(f"{k} = COALESCE({k}, ${i+2})" for i, k in enumerate(updates))
+    # ad_id sempre sobrescreve (igual ao n8n) — outros campos preservam valor existente
+    sets_parts = []
+    for i, k in enumerate(updates):
+        if k == "ad_id":
+            sets_parts.append(f"{k} = ${i+2}")
+        else:
+            sets_parts.append(f"{k} = COALESCE({k}, ${i+2})")
+    sets = ", ".join(sets_parts)
     values = list(updates.values())
     await pool.execute(
         f"UPDATE agente_vibe.contacts SET {sets}, updated_at = now() WHERE phone = $1",
         phone, *values,
     )
-    logger.info("Origem salva: phone=%s updates=%s", phone, list(updates.keys()))
+    logger.info("Origem salva: phone=%s updates=%s referral_raw=%s", phone, list(updates.keys()), updates)
 
     if ad_id:
         asyncio.create_task(_enrich_from_meta(phone, ad_id))
