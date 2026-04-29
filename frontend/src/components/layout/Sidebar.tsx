@@ -11,6 +11,7 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/contacts", label: "Contatos", icon: Users },
   { href: "/inbox", label: "Inbox", icon: MessageSquare },
   { href: "/deals", label: "Deals", icon: Briefcase },
+  { href: "/rag", label: "Base RAG", icon: BookOpen },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 

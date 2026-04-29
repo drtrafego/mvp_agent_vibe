@@ -59,14 +59,14 @@ export default async function InboxChatPage({
 
   if (!contact) notFound();
 
-  let initialMessages: { role: string; content: string; created_at: string }[] = [];
+  let initialMessages: { role: string; content: string; message_type?: string; media_id?: string | null; created_at: string }[] = [];
   if (contact.phone) {
     try {
       const rows = await db.execute(sql`
-        SELECT role, content, created_at
+        SELECT role, content, message_type, media_id, created_at
         FROM agente_vibe.chat_sessions
         WHERE phone = ${contact.phone}
-        ORDER BY created_at ASC
+        ORDER BY created_at ASC, CASE WHEN role='user' THEN 0 ELSE 1 END ASC
         LIMIT 200
       `);
       initialMessages = Array.from(rows) as typeof initialMessages;

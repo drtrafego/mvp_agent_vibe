@@ -81,8 +81,20 @@ async def _debounced_process(phone: str) -> None:
         return
 
     combined = "\n\n".join(parts)
-    # usa msg_data combinado como text
-    combined_data = {"type": "text", "text": combined, "msg_id": msgs[-1].get("msg_id", "")}
+
+    # Preserva media_id quando a mensagem é exclusivamente um áudio
+    # (permite que o frontend exiba o player em vez da transcrição)
+    audio_msgs = [m for m in msgs if m.get("type") == "audio" and m.get("media_id")]
+    text_msgs = [m for m in msgs if m.get("type") == "text" and m.get("text", "").strip()]
+    if audio_msgs and not text_msgs and len(audio_msgs) == 1:
+        combined_data = {
+            "type": "audio",
+            "text": combined,
+            "media_id": audio_msgs[0]["media_id"],
+            "msg_id": msgs[-1].get("msg_id", ""),
+        }
+    else:
+        combined_data = {"type": "text", "text": combined, "msg_id": msgs[-1].get("msg_id", "")}
 
     # chama o worker existente
     from queue_manager.worker import process_phone

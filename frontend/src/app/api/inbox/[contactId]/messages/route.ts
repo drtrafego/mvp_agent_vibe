@@ -22,7 +22,7 @@ export async function GET(
       SELECT role, content, message_type, media_id, created_at
       FROM agente_vibe.chat_sessions
       WHERE phone = ${contact.phone}
-      ORDER BY created_at ASC
+      ORDER BY created_at ASC, CASE WHEN role='user' THEN 0 ELSE 1 END ASC
       LIMIT 200
     `);
 
