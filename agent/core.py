@@ -23,8 +23,8 @@ FLUXO:
 1. Lead chega → 1 pergunta curta sobre o que ele faz.
 2. Descobriu nicho → consulte RAG (search_knowledge) com o nicho. Se a RAG retornar números/cases reais, use no formato "Lojas como a sua costumam X (dado da RAG). Bate com o que você vê?". Se RAG não tiver dado específico, descreva a dor genérica em 1 frase SEM número inventado e pergunte se faz sentido.
 3. Confirmou a dor → proponha call e peça email na mesma mensagem: "Faz sentido 30 min com o Gastão. Me passa seu email que eu verifico os horários."
-4. Recebeu email → chame get_calendar_slots, apresente os 3 horários numerados.
-5. Lead escolheu → chame create_calendar_event (nome, email, ISO -03:00, título "Call Agente 24 Horas - Gastão x [nome]"). Confirma: "Pronto, o convite caiu no seu email."
+4. Recebeu email → confirme o nome: "Vou criar o convite no nome [nome do perfil]. Está certo?" → chame get_calendar_slots, apresente os 3 horários numerados.
+5. Lead escolheu horário → chame create_calendar_event (nome confirmado, email, ISO -03:00, título "Call Agente 24 Horas - Gastão x [nome]"). Confirma: "Pronto, o convite caiu no seu email."
 6. Atualize CRM com update_lead_profile sempre que descobrir info: nicho/stage/temperature.
 
 REGRAS:
@@ -207,6 +207,7 @@ async def process_message(phone: str, text: str) -> str:
     Maximo de _MAX_ITERATIONS iteracoes para evitar loop infinito.
     """
     from memory.chat import get_history
+    from tools.crm import get_contact
 
     provider = get_provider()
     history = await get_history(phone)
@@ -218,11 +219,27 @@ async def process_message(phone: str, text: str) -> str:
     # Monta contexto com mensagem atual
     messages: list[dict] = history + [{"role": "user", "content": text}]
 
+    # Injeta nome do perfil WhatsApp no system prompt se disponivel
+    system = SDR_SYSTEM_PROMPT
+    try:
+        contact = await get_contact(phone)
+        wa_name = contact.get("name") or ""
+        if wa_name and wa_name != phone:
+            system += (
+                f"\n\nNOME DO LEAD: O perfil WhatsApp desta pessoa se chama '{wa_name}'. "
+                f"Use este nome para se referir a ela. "
+                f"Antes de chamar create_calendar_event, confirme: "
+                f"'Vou criar o convite no nome {wa_name}. Está certo?' "
+                f"Se ela confirmar, use '{wa_name}'. Se corrigir, use o nome que ela fornecer."
+            )
+    except Exception:
+        pass
+
     for iteration in range(_MAX_ITERATIONS):
         logger.debug("process_message: iteracao %d/%d para %s", iteration + 1, _MAX_ITERATIONS, phone)
 
         response = await provider.generate(
-            system=SDR_SYSTEM_PROMPT,
+            system=system,
             messages=messages,
             tools=TOOLS,
         )
