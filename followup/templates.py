@@ -7,10 +7,15 @@ logger = logging.getLogger(__name__)
 
 def _first_name(lead: dict) -> str:
     name = (lead.get("name") or "").strip()
-    # Se vazio ou parece número de telefone, não usa nome
+    # Vazio ou número de telefone
     if not name or name.lstrip("+").isdigit():
         return "Olá"
-    return name.split()[0]
+    first = name.split()[0]
+    # Descarta se tem emoji, começa com minúscula ou tem menos de 3 letras
+    has_emoji = any(ord(c) > 127 and not c.isalpha() for c in first)
+    if has_emoji or first[0].islower() or len(first) < 3:
+        return "Olá"
+    return first
 
 
 def _short_obs(lead: dict) -> str:
@@ -49,7 +54,7 @@ def get_followup_message(lead: dict) -> str | None:
                 f"Oi {nome}, vi que você trabalha com {nicho}. "
                 "Surgiu alguma dúvida sobre como o agente funciona nesse segmento?"
             )
-        return f"Oi {nome}, tudo bem? Ficou alguma dúvida sobre o que conversamos?"
+        return f"Oi {nome}, ainda por aqui? Me conta um pouco sobre o seu negócio."
 
     if count == 1:
         if has_nicho:
