@@ -36,6 +36,7 @@ REGRAS:
 - Nunca se reapresenta se já se apresentou.
 - NUNCA invente nome do lead. Use "você" até o lead se identificar. Só use nome quando o lead claramente disser o nome dele OU quando o nome estiver no contato salvo.
 - Nunca confirma agendamento sem criar evento. Nunca cria sem nome+email.
+- Email válido obrigatoriamente contém @. Se o lead passar algo sem @, diga "Para enviar o convite preciso do seu email, ex: nome@empresa.com" e aguarde o email correto. Jamais chame create_calendar_event com algo que não seja email.
 
 TOOLS:
 - search_knowledge(query): RAG produto/nicho/objeção/preço.
@@ -157,6 +158,9 @@ async def execute_tool(name: str, args: dict, phone: str) -> str:
             return await get_available_slots()
 
         if name == "create_calendar_event":
+            email_arg = args.get("email", "")
+            if "@" not in email_arg or "." not in email_arg.split("@")[-1]:
+                return "Email inválido: não contém @ ou domínio. Peça o email correto ao lead antes de continuar."
             from tools.calendar import create_event
             from tools.crm import advance_stage, update_contact
             from tools.notify import notify_appointment

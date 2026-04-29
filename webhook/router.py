@@ -63,6 +63,22 @@ async def _save_origin_bg(phone: str, referral: dict) -> None:
         logger.warning("save_origin falhou: phone=%s: %s", phone, exc)
 
 
+async def _save_whatsapp_name_bg(phone: str, name: str) -> None:
+    """Salva nome do perfil WhatsApp no contato (só se ainda não tem nome real)."""
+    if not name or name == phone:
+        return
+    try:
+        from tools.crm import get_contact, update_contact
+        contact = await get_contact(phone)
+        current_name = contact.get("name") or ""
+        # Só atualiza se o nome atual é o número ou está vazio
+        if not current_name or current_name == phone:
+            await update_contact(phone, name=name)
+            logger.info("Nome WhatsApp salvo: phone=%s name=%s", phone, name)
+    except Exception as exc:
+        logger.warning("save_whatsapp_name falhou: phone=%s: %s", phone, exc)
+
+
 async def _process_and_respond(phone: str, data: dict) -> None:
     """
     Adiciona mensagem ao buffer de debounce.
@@ -89,6 +105,15 @@ def _extract_messages(payload: dict) -> list[dict]:
         return value.get("messages", [])
     except (KeyError, IndexError, TypeError):
         return []
+
+
+def _extract_wa_contact_name(payload: dict) -> str:
+    """Extrai nome do perfil WhatsApp do primeiro contato no payload."""
+    try:
+        value = payload["entry"][0]["changes"][0]["value"]
+        return value.get("contacts", [{}])[0].get("profile", {}).get("name", "")
+    except (KeyError, IndexError, TypeError):
+        return ""
 
 
 def _extract_phone_number_id(payload: dict) -> str:
@@ -205,6 +230,9 @@ async def webhook_receive(request: Request, background_tasks: BackgroundTasks) -
     # AUDITORIA: log cada webhook com mensagem entrante (detecta duplicacao)
     logger.info("[WEBHOOK_IN] %d msg(s): ids=%s", len(messages), [m.get("id","?")[:30] for m in messages])
 
+    # Nome do perfil WhatsApp (válido para todas as msgs do mesmo payload)
+    wa_contact_name = _extract_wa_contact_name(payload)
+
     for msg in messages:
         phone_raw = msg.get("from", "")
         msg_id = msg.get("id", "")
@@ -224,6 +252,10 @@ async def webhook_receive(request: Request, background_tasks: BackgroundTasks) -
         if phone == _normalize_phone(settings.META_PHONE_NUMBER_ID):
             logger.debug("Mensagem ignorada (enviada pelo bot): msg_id=%s", msg_id)
             continue
+
+        # Nome do perfil WhatsApp
+        if wa_contact_name:
+            background_tasks.add_task(_save_whatsapp_name_bg, phone, wa_contact_name)
 
         # Rastreamento de origem: referral presente em Click-to-WhatsApp
         referral = msg.get("referral")
