@@ -123,56 +123,69 @@ async def mark_bot_message(phone: str) -> None:
 
 
 async def save_origin(phone: str, referral: dict) -> None:
-    """Salva dados de origem do lead a partir do objeto referral da Meta. Nao sobrescreve campos ja preenchidos."""
+    """
+    Salva origem do lead a partir do referral CTWA da Meta.
+    Logica identica ao agent_n8n_agencia/app/api/whatsapp/webhook/route.ts:
+      1. Garante que o contato existe (upsert)
+      2. Salva ad_id + UTMs imediatamente (sincrono)
+      3. Dispara enriquecimento via Meta Graph API (fire and forget)
+    """
     if not referral:
         return
 
-    updates: dict = {}
-
-    ad_id = referral.get("source_id", "")
-    if ad_id:
-        updates["ad_id"] = ad_id
-
-    placement = referral.get("source_type", "")
-    if placement:
-        updates["placement"] = placement
-
-    source_url = referral.get("source_url", "")
-    if source_url:
-        try:
-            parsed = urlparse(source_url)
-            params = parse_qs(parsed.query)
-            for key in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"):
-                val = params.get(key, [None])[0]
-                if val:
-                    updates[key] = val
-        except Exception:
-            pass
-
-    if not updates:
+    ad_id = referral.get("source_id") or ""
+    if not ad_id:
+        logger.info("Origem ignorada: referral sem source_id. phone=%s referral=%s", phone, referral)
         return
 
-    # Garante que o contato existe antes do UPDATE (evita race condition com novo lead)
-    await get_contact(phone)
+    # Parsear UTMs da source_url
+    headline = referral.get("headline") or ""
+    body_text = referral.get("body") or ""
+    source_url = referral.get("source_url") or ""
+    utm_source = utm_medium = utm_campaign = utm_content = utm_placement = ""
+    if source_url:
+        try:
+            params = parse_qs(urlparse(source_url).query)
+            utm_source    = params.get("utm_source",    [None])[0] or source_url
+            utm_medium    = params.get("utm_medium",    [None])[0] or body_text
+            utm_campaign  = params.get("utm_campaign",  [None])[0] or ""
+            utm_content   = params.get("utm_content",   [None])[0] or headline
+            utm_placement = params.get("utm_placement", [None])[0] or params.get("placement", [None])[0] or ""
+        except Exception:
+            utm_source = source_url
+            utm_medium = body_text
+            utm_content = headline
 
+    # 1. Garante que o contato existe (mesmo padrao do n8n: upsert antes do update)
     pool = await _get_pool()
-    # ad_id sempre sobrescreve (igual ao n8n) — outros campos preservam valor existente
-    sets_parts = []
-    for i, k in enumerate(updates):
-        if k == "ad_id":
-            sets_parts.append(f"{k} = ${i+2}")
-        else:
-            sets_parts.append(f"{k} = COALESCE({k}, ${i+2})")
-    sets = ", ".join(sets_parts)
-    values = list(updates.values())
     await pool.execute(
-        f"UPDATE agente_vibe.contacts SET {sets}, updated_at = now() WHERE phone = $1",
-        phone, *values,
+        """
+        INSERT INTO agente_vibe.contacts (id, phone, name, stage, followup_count)
+        VALUES (gen_random_uuid()::text, $1, $1, 'novo', 0)
+        ON CONFLICT (phone) WHERE phone IS NOT NULL DO UPDATE SET updated_at = now()
+        """,
+        phone,
     )
-    logger.info("Origem salva: phone=%s updates=%s referral_raw=%s", phone, list(updates.keys()), updates)
 
-    if ad_id:
-        asyncio.create_task(_enrich_from_meta(phone, ad_id))
+    # 2. Salva ad_id e UTMs (ad_id sempre sobrescreve, UTMs preservam se ja preenchidos)
+    await pool.execute(
+        """
+        UPDATE agente_vibe.contacts SET
+            ad_id        = $2,
+            utm_content  = COALESCE(NULLIF(utm_content,  ''), $3),
+            utm_source   = COALESCE(NULLIF(utm_source,   ''), $4),
+            utm_medium   = COALESCE(NULLIF(utm_medium,   ''), $5),
+            utm_campaign = COALESCE(NULLIF(utm_campaign, ''), $6),
+            placement    = COALESCE(NULLIF(placement,    ''), $7),
+            updated_at   = now()
+        WHERE phone = $1
+        """,
+        phone, ad_id, utm_content, utm_source, utm_medium, utm_campaign, utm_placement,
+    )
+    logger.info("Origem salva: phone=%s ad_id=%s source_url=%s", phone, ad_id, source_url)
+
+    # 3. Enriquecimento via Meta Graph API (fire and forget — igual ao n8n after())
+    asyncio.create_task(_enrich_from_meta(phone, ad_id))
 
 
 async def _enrich_from_meta(phone: str, ad_id: str) -> None:
