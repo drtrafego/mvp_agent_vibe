@@ -58,41 +58,53 @@ async def _generate_followup(phone: str, lead: dict, count: int) -> str | None:
         nicho = (lead.get("nicho") or "").strip()
         obs = (lead.get("observacoes_sdr") or "").strip()
         name = (lead.get("name") or "").strip()
-        # Usa primeiro nome se parece nome real
+        nome = ""
         if name and not name.lstrip("+").isdigit() and name[0].isupper() and len(name) >= 3:
-            nome = name.split()[0]
-        else:
-            nome = ""
+            first = name.split()[0]
+            has_emoji = any(ord(c) > 127 and not c.isalpha() for c in first)
+            if not has_emoji and len(first) >= 3:
+                nome = first
 
         tentativa = count + 1
         max_tentativas = 6
+
+        # Monta resumo da conversa para o system prompt
+        conversa_resumo = ""
+        if history:
+            linhas = []
+            for m in history[-8:]:
+                role_label = "Lead" if m["role"] == "user" else "Agente"
+                linhas.append(f"{role_label}: {m['content'][:200]}")
+            conversa_resumo = "\n".join(linhas)
 
         system = (
             "Você é um agente SDR do Casal do Tráfego fazendo follow-up no WhatsApp. "
             "O lead parou de responder. Gere UMA mensagem curta de follow-up (1 a 2 frases) "
             "para retomar o contato de forma natural e humana, sem pitch, sem asterisco, sem travessão. "
-            "Base sua mensagem EXATAMENTE em onde a conversa parou — não finja que houve mais troca do que houve. "
-            "Se o lead mal começou a conversa, convide-o a continuar. "
-            "Se já avançou bastante, retome o ponto específico. "
-            f"Esta é a tentativa {tentativa} de {max_tentativas}. "
-            + (f"Nicho do lead: {nicho}. " if nicho else "")
+            "Base sua mensagem EXATAMENTE em onde a conversa parou. "
+            "Se o lead mal começou, convide a continuar. Se avançou bastante, retome o ponto específico. "
+            f"Tentativa {tentativa} de {max_tentativas}. "
+            + (f"Nicho: {nicho}. " if nicho else "")
             + (f"Observações: {obs}. " if obs else "")
             + (f"Nome do lead: {nome}. " if nome else "")
-            + "Responda APENAS com o texto da mensagem, sem explicação, sem aspas."
+            + ("Histórico:\n" + conversa_resumo if conversa_resumo else "Nenhuma conversa ainda.")
+            + "\n\nResponda APENAS com o texto da mensagem, sem explicação, sem aspas."
         )
 
-        if not history:
-            messages = [{"role": "user", "content": "[Lead entrou em contato mas não houve conversa ainda]"}]
-        else:
-            messages = history[-6:]  # últimas 6 mensagens para contexto
+        # Sempre passa uma mensagem user para o Gemini não rejeitar
+        messages = [{"role": "user", "content": "Gere o follow-up agora."}]
 
         provider = get_provider()
         response = await provider.generate(system=system, messages=messages, tools=[])
 
-        text = (response.content or "").strip()
-        if text:
-            logger.info("Follow-up gerado pelo LLM: phone=%s fu=%d texto=%r", phone, count, text[:100])
-            return text
+        # Ignora se o provider retornou o fallback de erro
+        if response.finish_reason == "error" or not response.content:
+            logger.warning("LLM retornou erro no follow-up: phone=%s fu=%d", phone, count)
+            raise ValueError("LLM error")
+
+        text = response.content.strip()
+        logger.info("Follow-up gerado pelo LLM: phone=%s fu=%d texto=%r", phone, count, text[:100])
+        return text
 
     except Exception as exc:
         logger.error("Erro ao gerar follow-up via LLM: phone=%s fu=%d: %s", phone, count, exc)
